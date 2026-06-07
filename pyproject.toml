@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "equidexflow"
+version = "0.1.0"
+description = "SE(3)-equivariant 6-DoF dexterous grasp pose generative flows"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+keywords = ["grasping", "dexterous-manipulation", "equivariance", "flow-matching", "robotics"]
+
+# Core (pure inference: load_checkpoint + model.sample). No trimesh/open3d/drake.
+dependencies = [
+    "torch>=2.0",
+    "numpy<2.0",
+    "scipy",
+    "omegaconf>=2.3",
+    "roma",
+]
+
+[project.optional-dependencies]
+data = ["trimesh", "h5py"]                              # dataset loaders + mesh sampling
+train = ["tensorboardX", "tqdm", "pandas", "trimesh", "h5py"]
+viz = ["open3d>=0.16", "plotly", "matplotlib"]          # visualization + plot scripts
+demo = ["trimesh", "open3d>=0.16", "gdown"]             # mesh -> grasps -> posed-hand render + fetch
+all = ["equidexflow[data,train,viz,demo]"]
+
+[project.scripts]
+equidexflow-train = "equidexflow.cli.train:main"
+equidexflow-eval = "equidexflow.cli.eval:main"
+equidexflow-demo = "equidexflow.cli.demo:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"equidexflow.kinematics" = ["*.json"]
+"equidexflow.configs" = ["*.yml", "*.yaml"]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["__pycache__/*"]

@@ -1,0 +1,452 @@
+{
+  "comment": "LEAP collision spheres, URDF-derived. Body spheres tiled inside their <collision><box>; tip spheres at the *_tip_head site with 8mm radius.",
+  "n_body_spheres": 37,
+  "n_tip_spheres": 4,
+  "body_spheres": [
+    {
+      "body": "palm_lower",
+      "chain": "palm",
+      "step": 0,
+      "offset_m": [
+        -0.03,
+        -0.07200000000000001,
+        -0.01
+      ],
+      "radius_m": 0.023
+    },
+    {
+      "body": "palm_lower",
+      "chain": "palm",
+      "step": 0,
+      "offset_m": [
+        -0.03,
+        -0.035,
+        -0.01
+      ],
+      "radius_m": 0.023
+    },
+    {
+      "body": "palm_lower",
+      "chain": "palm",
+      "step": 0,
+      "offset_m": [
+        -0.03,
+        0.001999999999999995,
+        -0.01
+      ],
+      "radius_m": 0.023
+    },
+    {
+      "body": "palm_lower",
+      "chain": "palm",
+      "step": 0,
+      "offset_m": [
+        -0.078,
+        -0.06,
+        -0.008
+      ],
+      "radius_m": 0.02
+    },
+    {
+      "body": "palm_lower",
+      "chain": "palm",
+      "step": 0,
+      "offset_m": [
+        -0.078,
+        -0.02,
+        -0.008
+      ],
+      "radius_m": 0.02
+    },
+    {
+      "body": "mcp_joint",
+      "chain": "index",
+      "step": 0,
+      "offset_m": [
+        -0.014,
+        0.0195,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "mcp_joint",
+      "chain": "index",
+      "step": 0,
+      "offset_m": [
+        -0.014,
+        0.040499999999999994,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "pip",
+      "chain": "index",
+      "step": 1,
+      "offset_m": [
+        0.0014999999999999979,
+        -0.0002,
+        -0.011
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "pip",
+      "chain": "index",
+      "step": 1,
+      "offset_m": [
+        0.013500000000000002,
+        -0.0002,
+        -0.011
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "dip",
+      "chain": "index",
+      "step": 2,
+      "offset_m": [
+        0.004,
+        -0.0255,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "dip",
+      "chain": "index",
+      "step": 2,
+      "offset_m": [
+        0.004,
+        -0.014500000000000002,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "fingertip",
+      "chain": "index",
+      "step": 3,
+      "offset_m": [
+        0.0,
+        -0.0165,
+        0.015
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "fingertip",
+      "chain": "index",
+      "step": 3,
+      "offset_m": [
+        0.0,
+        -0.003499999999999998,
+        0.015
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "mcp_joint_2",
+      "chain": "middle",
+      "step": 0,
+      "offset_m": [
+        -0.014,
+        0.0195,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "mcp_joint_2",
+      "chain": "middle",
+      "step": 0,
+      "offset_m": [
+        -0.014,
+        0.040499999999999994,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "pip_2",
+      "chain": "middle",
+      "step": 1,
+      "offset_m": [
+        0.0014999999999999979,
+        -0.0002,
+        -0.011
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "pip_2",
+      "chain": "middle",
+      "step": 1,
+      "offset_m": [
+        0.013500000000000002,
+        -0.0002,
+        -0.011
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "dip_2",
+      "chain": "middle",
+      "step": 2,
+      "offset_m": [
+        0.004,
+        -0.0255,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "dip_2",
+      "chain": "middle",
+      "step": 2,
+      "offset_m": [
+        0.004,
+        -0.014500000000000002,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "fingertip_2",
+      "chain": "middle",
+      "step": 3,
+      "offset_m": [
+        0.0,
+        -0.0165,
+        0.015
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "fingertip_2",
+      "chain": "middle",
+      "step": 3,
+      "offset_m": [
+        0.0,
+        -0.003499999999999998,
+        0.015
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "mcp_joint_3",
+      "chain": "ring",
+      "step": 0,
+      "offset_m": [
+        -0.014,
+        0.0195,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "mcp_joint_3",
+      "chain": "ring",
+      "step": 0,
+      "offset_m": [
+        -0.014,
+        0.040499999999999994,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "pip_3",
+      "chain": "ring",
+      "step": 1,
+      "offset_m": [
+        0.0014999999999999979,
+        -0.0002,
+        -0.011
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "pip_3",
+      "chain": "ring",
+      "step": 1,
+      "offset_m": [
+        0.013500000000000002,
+        -0.0002,
+        -0.011
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "dip_3",
+      "chain": "ring",
+      "step": 2,
+      "offset_m": [
+        0.004,
+        -0.0255,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "dip_3",
+      "chain": "ring",
+      "step": 2,
+      "offset_m": [
+        0.004,
+        -0.014500000000000002,
+        0.015
+      ],
+      "radius_m": 0.017
+    },
+    {
+      "body": "fingertip_3",
+      "chain": "ring",
+      "step": 3,
+      "offset_m": [
+        0.0,
+        -0.0165,
+        0.015
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "fingertip_3",
+      "chain": "ring",
+      "step": 3,
+      "offset_m": [
+        0.0,
+        -0.003499999999999998,
+        0.015
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "thumb_temp_base",
+      "chain": "thumb",
+      "step": 0,
+      "offset_m": [
+        0.0014999999999999979,
+        -0.0002,
+        -0.011
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "thumb_temp_base",
+      "chain": "thumb",
+      "step": 0,
+      "offset_m": [
+        0.013500000000000002,
+        -0.0002,
+        -0.011
+      ],
+      "radius_m": 0.011
+    },
+    {
+      "body": "thumb_pip",
+      "chain": "thumb",
+      "step": 1,
+      "offset_m": [
+        0.0,
+        -0.008000000000000002,
+        -0.009
+      ],
+      "radius_m": 0.009
+    },
+    {
+      "body": "thumb_pip",
+      "chain": "thumb",
+      "step": 1,
+      "offset_m": [
+        0.0,
+        0.008000000000000002,
+        -0.009
+      ],
+      "radius_m": 0.009
+    },
+    {
+      "body": "thumb_dip",
+      "chain": "thumb",
+      "step": 2,
+      "offset_m": [
+        -0.004,
+        0.008499999999999999,
+        -0.014
+      ],
+      "radius_m": 0.014
+    },
+    {
+      "body": "thumb_dip",
+      "chain": "thumb",
+      "step": 2,
+      "offset_m": [
+        -0.004,
+        0.0355,
+        -0.014
+      ],
+      "radius_m": 0.014
+    },
+    {
+      "body": "thumb_fingertip",
+      "chain": "thumb",
+      "step": 3,
+      "offset_m": [
+        0.0,
+        -0.0225,
+        -0.015
+      ],
+      "radius_m": 0.0125
+    },
+    {
+      "body": "thumb_fingertip",
+      "chain": "thumb",
+      "step": 3,
+      "offset_m": [
+        0.0,
+        -0.0075,
+        -0.015
+      ],
+      "radius_m": 0.0125
+    }
+  ],
+  "tip_spheres": [
+    {
+      "chain": "index",
+      "offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "radius_m": 0.008
+    },
+    {
+      "chain": "middle",
+      "offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "radius_m": 0.008
+    },
+    {
+      "chain": "ring",
+      "offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "radius_m": 0.008
+    },
+    {
+      "chain": "thumb",
+      "offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "radius_m": 0.008
+    }
+  ]
+}

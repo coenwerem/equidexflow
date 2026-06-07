@@ -1,0 +1,107 @@
+# Allegro "Full" variant — flow hand_q + reach-at-x_t + grasp-center frame.
+#
+# Option 2 fix: the reach loss now uses x_t (the flow interpolant at random
+# t) instead of GT wrist. This teaches the hand_q decoder to reach from
+# imperfect wrists, bridging the train/inference gap where the wrist comes
+# from the ODE (not GT). At t~1 the reach loss matches GT-wrist behavior;
+# at t~0 it trains robustness to noisy wrists.
+#
+# Reach weight reduced from 100 to 10: the x_t-based reach loss is ~100x
+# larger than the GT-wrist version (x_t can be far from GT), so scale down
+# to keep similar effective gradient magnitude.
+model:
+  hand: allegro
+  name: equidexflow_dex
+  p_uncond: 0.1
+  guidance: 2.0
+  num_ode_steps: 10
+  wrist_frame: grasp_center
+  hand_q_decoder: flow
+  n_coupling_layers: 8
+  checkpoint: null
+
+data:
+  mu: 0.5
+  object_mass: 0.2
+  train:
+    dataset:
+      name: dexgrasp
+      grasp_db_dir: ${oc.env:EQUIDEXFLOW_DATA_DIR}/dexgraspdb/v3/allegro
+      object_mesh_dir: ${oc.env:EQUIDEXFLOW_OBJECTS_DIR,${oc.env:EQUIDEXFLOW_DATA_DIR}/objects}
+      n_object_points: 512
+      max_contacts: 64
+      mu: 0.5
+      object_mass: 0.2
+      augment: true
+      split: train
+      object_names: null
+      wrist_frame: grasp_center
+    batch_size: 8
+    num_workers: 4
+    shuffle: true
+  val:
+    dataset:
+      name: dexgrasp
+      grasp_db_dir: ${oc.env:EQUIDEXFLOW_DATA_DIR}/dexgraspdb/v3/allegro
+      object_mesh_dir: ${oc.env:EQUIDEXFLOW_OBJECTS_DIR,${oc.env:EQUIDEXFLOW_DATA_DIR}/objects}
+      n_object_points: 512
+      max_contacts: 64
+      mu: 0.5
+      object_mass: 0.2
+      augment: false
+      split: val
+      object_names: null
+      wrist_frame: grasp_center
+    batch_size: 2
+    num_workers: 4
+    shuffle: false
+  test:
+    dataset:
+      name: dexgrasp
+      grasp_db_dir: ${oc.env:EQUIDEXFLOW_DATA_DIR}/dexgraspdb/v3/allegro
+      object_mesh_dir: ${oc.env:EQUIDEXFLOW_OBJECTS_DIR,${oc.env:EQUIDEXFLOW_DATA_DIR}/objects}
+      n_object_points: 512
+      max_contacts: 64
+      mu: 0.5
+      object_mass: 0.2
+      augment: false
+      split: test
+      object_names: null
+      wrist_frame: grasp_center
+    batch_size: 2
+    num_workers: 4
+    shuffle: false
+
+training:
+  optimizer: Adam
+  lr: 1.0e-4
+  weight_decay: 1.0e-6
+  epochs: 20
+  batch_size: 2
+  loss_weights:
+    flow: 1.0
+    hand_q: 1.0
+    contact: 100.0
+    normal: 1.0
+    force: 0.1
+    reach: 10.0
+    physics_wrench: 0.1
+    physics_friction: 0.1
+    physics_collision: 100.0
+  print_interval: 50
+  val_interval: 200
+  save_interval: 500
+  eval_interval: 99999999
+
+evaluation:
+  num_samples: 10
+  mu: 0.5
+  physics_weights:
+    beta1: 1.0
+    beta2: 2.0
+    beta3: 1.0
+    beta4: 0.5
+
+logging:
+  log_dir: logs/equidexflow_dex_full_fc_reach_xt
+  exp_name: equidexflow_dex_full_fc_reach_xt

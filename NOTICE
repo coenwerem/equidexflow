@@ -1,0 +1,32 @@
+EquiDexFlow
+===========
+
+EquiDexFlow derives from EquiGraspFlow (Lim et al.), used under the MIT License
+(see LICENSE). The SE(3)-equivariant flow-matching backbone and several utility
+modules originate upstream; the dexterous extension (joint contact/normal/force
+prediction, differentiable hand kinematics, physics losses, the dexterous
+trainer and scorer) is new in this repository.
+
+Substantially upstream-derived (EquiGraspFlow):
+  src/equidexflow/models/vn_layers.py
+  src/equidexflow/models/vn_dgcnn.py
+  src/equidexflow/models/vn_vector_fields.py
+  src/equidexflow/models/equi_grasp_flow.py
+  src/equidexflow/utils/Lie.py
+  src/equidexflow/utils/ode_solvers.py
+  src/equidexflow/utils/distributions.py
+  src/equidexflow/loaders/acronym.py
+  src/equidexflow/configs/equigraspflow_full.yml
+  src/equidexflow/configs/equigraspflow_partial.yml
+
+New in EquiDexFlow:
+  src/equidexflow/models/equi_dex_flow.py
+  src/equidexflow/models/{contact,force,hand_q,hand_q_flow}_decoder.py
+  src/equidexflow/kinematics/  (differentiable Allegro/LEAP FK + physics terms)
+  src/equidexflow/loaders/dexgrasp_db.py
+  src/equidexflow/physics/scorer.py
+  src/equidexflow/trainers/dex_trainer.py
+
+The default training data is produced by FRoGGeR (Li et al.), but EquiDexFlow
+does not depend on FRoGGeR at runtime: it consumes a documented JSON grasp
+schema (see data/README.md) that any synthesis backbone can emit.

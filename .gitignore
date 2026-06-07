@@ -1,0 +1,25 @@
+# Large artifacts live on Google Drive, fetched via checkpoints/download_checkpoints.py
+# and scripts/download_assets.py. Keep configs / manifests / metrics in git.
+checkpoints/**/*.pt
+data/dexgraspdb/
+data/**/*.npz
+data/**/*.h5
+
+# Run outputs
+outputs/
+logs/
+**/events.out.tfevents*
+
+# internal
+docs/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+.pytest_cache/
+.ruff_cache/

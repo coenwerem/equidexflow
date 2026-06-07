@@ -1,0 +1,121 @@
+schema_version: 1
+hand: allegro
+note: allegro_full + the three ablations are the checkpoints that produced the preprint
+  tab:results (verified against results_table_81obj_xhand.yaml). allegro_full_flow_alt
+  is the Real-NVP-joint-decoder / grasp_center variant staged in case the paper text
+  is reconciled toward the flow architecture; it was NOT used for the published table.
+checkpoints:
+  allegro_full:
+    file: checkpoint_best.pt
+    config: config.yml
+    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    sha256: f29bbcc9a8cda5dbe5977cbe6e8f4a13a12ed7fc9d231d468778e68cd11c706d
+    size_mb: 6.8
+    arch:
+      hand: allegro
+      hand_q_decoder: deterministic
+      wrist_frame: base
+      num_ode_steps: 10
+    source_run: equidexflow_dex_full_xhand/20260526-xhand
+    reproduces_preprint_table: true
+    expected_metrics:
+      contact_err_m: 0.04151318842878588
+      force_err_N: 1.994678970196365
+      dir_err_deg: 65.28747977853641
+      friction_viol_pct: 0.0
+      wrench_residual_Nm: 0.4634970394365581
+      top1_score: -0.9627618826465842
+      top3_score: -1.18493807561113
+  allegro_geom_only:
+    file: checkpoint_best.pt
+    config: config.yml
+    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    sha256: f9cf4ca301f8e1c263bf6e3913d107d4ffe07fb5e98ffb0994f8c00317b34306
+    size_mb: 6.8
+    arch:
+      hand: allegro
+      hand_q_decoder: deterministic
+      wrist_frame: base
+      num_ode_steps: 10
+    source_run: equidexflow_dex_geom_only_81_xhand/20260526-xhand
+    reproduces_preprint_table: true
+    expected_metrics:
+      contact_err_m: 0.041457208083298655
+      force_err_N: 1.844454055675018
+      dir_err_deg: 65.05682331982027
+      friction_viol_pct: 0.0
+      wrench_residual_Nm: 1.582856563506303
+      top1_score: -3.293546701654976
+      top3_score: -4.018328928653105
+  allegro_pose_only:
+    file: checkpoint_best.pt
+    config: config.yml
+    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    sha256: f0ad1e2b60b5c390cbcd0d5c51437320a9ebc0a6eebb1012dfb888f8971437a2
+    size_mb: 6.8
+    arch:
+      hand: allegro
+      hand_q_decoder: deterministic
+      wrist_frame: base
+      num_ode_steps: 10
+    source_run: equidexflow_dex_pose_only_xhand/20260526-xhand
+    reproduces_preprint_table: true
+    expected_metrics:
+      contact_err_m: 0.0402920919953397
+      force_err_N: 1.5709008586443503
+      dir_err_deg: 54.01350209619768
+      friction_viol_pct: 0.0
+      wrench_residual_Nm: 1.2935759568655933
+      top1_score: -2.5189570011915983
+      top3_score: -3.2530201894265636
+  allegro_contact_only:
+    file: checkpoint_best.pt
+    config: config.yml
+    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    sha256: 4eff0a8b39e35a617fa3197909d105e7d4ddd33d5bc4613d2cfe108389c6f8d4
+    size_mb: 6.8
+    arch:
+      hand: allegro
+      hand_q_decoder: deterministic
+      wrist_frame: base
+      num_ode_steps: 10
+    source_run: equidexflow_dex_contact_only_xhand/20260526-xhand
+    reproduces_preprint_table: true
+    expected_metrics:
+      contact_err_m: 0.04075742327682903
+      force_err_N: 1.8388382229540083
+      dir_err_deg: 55.46354338438902
+      friction_viol_pct: 0.0
+      wrench_residual_Nm: 1.3622427958029288
+      top1_score: -2.5744140177597234
+      top3_score: -3.4572200677031844
+  allegro_full_flow_alt:
+    file: checkpoint_best.pt
+    config: config.yml
+    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    sha256: 2f03be115a5306ec271aa3a38838d55162579dc8d6b7653418e0d7dded0355ac
+    size_mb: 22.5
+    arch:
+      hand: allegro
+      hand_q_decoder: flow
+      wrist_frame: grasp_center
+      num_ode_steps: 10
+    source_run: equidexflow_dex_full_xhand_reach/20260526-xhand
+    reproduces_preprint_table: false
+    expected_metrics: null
+    note: flow / grasp_center variant; not part of the published table
+datasets:
+  dexgraspdb_v3_allegro:
+    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    sha256: REPLACE_AFTER_FREEZE
+    size_mb: 22
+    n_objects: 81
+    n_grasps: 8099
+    split: 80/10/10
+    note: default training data (FRoGGeR-synthesized); see data/README.md schema
+  dexgraspdb_v3_leap:
+    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    sha256: REPLACE_AFTER_FREEZE
+    size_mb: 22
+    n_objects: 82
+    note: LEAP training data

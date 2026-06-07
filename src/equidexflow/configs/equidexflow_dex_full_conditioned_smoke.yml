@@ -1,0 +1,75 @@
+# Quick smoke test: 30 steps, verifies the conditioned model trains without crashes.
+model:
+  name: equidexflow_dex
+  p_uncond: 0.1
+  guidance: 2.0
+  num_ode_steps: 10
+  checkpoint: outputs/training_results/equidexflow_dex_full/20260521-1625/checkpoint_best.pt
+
+data:
+  mu: 0.5
+  object_mass: 0.2
+  train:
+    dataset:
+      name: dexgrasp
+      grasp_db_dir: ${oc.env:EQUIDEXFLOW_DATA_DIR}/dexgraspdb/v3/allegro
+      object_mesh_dir: ${oc.env:EQUIDEXFLOW_OBJECTS_DIR,${oc.env:EQUIDEXFLOW_DATA_DIR}/objects}
+      n_object_points: 512
+      max_contacts: 64
+      mu: 0.5
+      object_mass: 0.2
+      augment: true
+      split: train
+      object_names: null
+    batch_size: 4
+    num_workers: 2
+    shuffle: true
+  val:
+    dataset:
+      name: dexgrasp
+      grasp_db_dir: ${oc.env:EQUIDEXFLOW_DATA_DIR}/dexgraspdb/v3/allegro
+      object_mesh_dir: ${oc.env:EQUIDEXFLOW_OBJECTS_DIR,${oc.env:EQUIDEXFLOW_DATA_DIR}/objects}
+      n_object_points: 512
+      max_contacts: 64
+      mu: 0.5
+      object_mass: 0.2
+      augment: false
+      split: val
+      object_names: null
+    batch_size: 2
+    num_workers: 2
+    shuffle: false
+
+training:
+  optimizer: Adam
+  lr: 1.0e-4
+  weight_decay: 1.0e-6
+  epochs: 1
+  max_steps: 30
+  batch_size: 2
+  loss_weights:
+    flow: 1.0
+    hand_q: 1.0
+    contact: 100.0
+    normal: 1.0
+    force: 1.0
+    physics_wrench: 0.1
+    physics_friction: 0.1
+    physics_collision: 1.0
+  print_interval: 5
+  val_interval: 9999
+  save_interval: 9999
+  eval_interval: 9999
+
+evaluation:
+  num_samples: 10
+  mu: 0.5
+  physics_weights:
+    beta1: 1.0
+    beta2: 2.0
+    beta3: 1.0
+    beta4: 0.5
+
+logging:
+  log_dir: logs/equidexflow_dex_full_conditioned_smoke
+  exp_name: equidexflow_dex_full_conditioned_smoke

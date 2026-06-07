@@ -1,0 +1,11 @@
+{
+  "variant": "allegro_geom_only",
+  "source": "results_table_81obj_xhand.yaml",
+  "contact_err_m": 0.041457208083298655,
+  "force_err_N": 1.844454055675018,
+  "dir_err_deg": 65.05682331982027,
+  "friction_viol_pct": 0.0,
+  "wrench_residual_Nm": 1.582856563506303,
+  "top1_score": -3.293546701654976,
+  "top3_score": -4.018328928653105
+}

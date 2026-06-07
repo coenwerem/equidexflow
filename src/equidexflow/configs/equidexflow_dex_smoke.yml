@@ -1,0 +1,102 @@
+# EquiDexFlow smoke config -- short run to verify train.py end-to-end.
+# Pinned to the existing MuJoCoDex/grasp_db that the 20260430 checkpoint used.
+# Purpose: confirm the pipeline still loads data, builds the model, runs a
+# forward + backward pass, and writes a checkpoint without crashing.
+#
+# Run:
+#   python train.py \
+#     --config configs/equidexflow_dex_smoke.yml --device 0
+
+model:
+  name: equidexflow_dex
+  p_uncond: 0.1
+  guidance: 2.0
+  num_ode_steps: 10
+
+data:
+  mu: 0.5
+  object_mass: 0.2
+
+  train:
+    dataset:
+      name: dexgrasp
+      grasp_db_dir: ${oc.env:EQUIDEXFLOW_DATA_DIR}/dexgraspdb/v3/allegro
+      object_mesh_dir: ${oc.env:EQUIDEXFLOW_OBJECTS_DIR,${oc.env:EQUIDEXFLOW_DATA_DIR}/objects}
+      n_object_points: 512
+      max_contacts: 64
+      mu: 0.5
+      object_mass: 0.2
+      augment: true
+      split: train
+      object_names:
+        - cube
+        - graspit_box
+        - graspit_cylinder
+        - master_chef_can
+        - mustard_bottle
+        - phydex
+        - potted_meat_can
+        - sphere
+        - tennis_ball
+    batch_size: 2
+    num_workers: 2
+    shuffle: true
+
+  val:
+    dataset:
+      name: dexgrasp
+      grasp_db_dir: ${oc.env:EQUIDEXFLOW_DATA_DIR}/dexgraspdb/v3/allegro
+      object_mesh_dir: ${oc.env:EQUIDEXFLOW_OBJECTS_DIR,${oc.env:EQUIDEXFLOW_DATA_DIR}/objects}
+      n_object_points: 512
+      max_contacts: 64
+      mu: 0.5
+      object_mass: 0.2
+      augment: false
+      split: val
+      object_names:
+        - cube
+        - graspit_box
+        - graspit_cylinder
+        - master_chef_can
+        - mustard_bottle
+        - phydex
+        - potted_meat_can
+        - sphere
+        - tennis_ball
+    batch_size: 2
+    num_workers: 2
+    shuffle: false
+
+training:
+  optimizer: Adam
+  lr: 1.0e-4
+  weight_decay: 1.0e-6
+  epochs: 2
+  batch_size: 2
+
+  loss_weights:
+    flow: 1.0
+    hand_q: 1.0
+    contact: 100.0
+    force: 1.0
+    physics_wrench: 0.01
+    physics_friction: 0.01
+    physics_collision: 0.01
+
+  print_interval: 5
+  val_interval: 20
+  eval_interval: 100
+  save_interval: 50
+
+evaluation:
+  num_samples: 4
+  mu: 0.5
+  physics_weights:
+    beta1: 1.0
+    beta2: 2.0
+    beta3: 1.0
+    beta4: 0.5
+
+logging:
+  log_dir: logs/equidexflow_dex_smoke
+  exp_name: equidexflow_dex_smoke

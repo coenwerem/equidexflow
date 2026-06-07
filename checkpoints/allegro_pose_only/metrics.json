@@ -1,0 +1,11 @@
+{
+  "variant": "allegro_pose_only",
+  "source": "results_table_81obj_xhand.yaml",
+  "contact_err_m": 0.0402920919953397,
+  "force_err_N": 1.5709008586443503,
+  "dir_err_deg": 54.01350209619768,
+  "friction_viol_pct": 0.0,
+  "wrench_residual_Nm": 1.2935759568655933,
+  "top1_score": -2.5189570011915983,
+  "top3_score": -3.2530201894265636
+}
