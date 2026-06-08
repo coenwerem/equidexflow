@@ -1,14 +1,12 @@
 schema_version: 1
 hand: allegro
 note: allegro_full + the three ablations are the checkpoints that produced the preprint
-  tab:results (verified against results_table_81obj_xhand.yaml). allegro_full_flow_alt
-  is the Real-NVP-joint-decoder / grasp_center variant staged in case the paper text
-  is reconciled toward the flow architecture; it was NOT used for the published table.
+  tab:results (verified against results_table_81obj_xhand.yaml).
 checkpoints:
   allegro_full:
     file: checkpoint_best.pt
     config: config.yml
-    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    drive_id: 188jMelN00TzRW0wfftP_G1Im4ZEeYpqg
     sha256: f29bbcc9a8cda5dbe5977cbe6e8f4a13a12ed7fc9d231d468778e68cd11c706d
     size_mb: 6.8
     arch:
@@ -29,7 +27,7 @@ checkpoints:
   allegro_geom_only:
     file: checkpoint_best.pt
     config: config.yml
-    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    drive_id: 1MQ1Jg8YM_tJRmN7HekQesnLrEGZHpMAY
     sha256: f9cf4ca301f8e1c263bf6e3913d107d4ffe07fb5e98ffb0994f8c00317b34306
     size_mb: 6.8
     arch:
@@ -50,7 +48,7 @@ checkpoints:
   allegro_pose_only:
     file: checkpoint_best.pt
     config: config.yml
-    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    drive_id: 1mLxVEEpKc2nEWFb00gVKVFvAkVHZgryR
     sha256: f0ad1e2b60b5c390cbcd0d5c51437320a9ebc0a6eebb1012dfb888f8971437a2
     size_mb: 6.8
     arch:
@@ -71,7 +69,7 @@ checkpoints:
   allegro_contact_only:
     file: checkpoint_best.pt
     config: config.yml
-    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    drive_id: 1d4iyq29GkxCn7sZhZVGpyB8DBf5LO2G_
     sha256: 4eff0a8b39e35a617fa3197909d105e7d4ddd33d5bc4613d2cfe108389c6f8d4
     size_mb: 6.8
     arch:
@@ -89,24 +87,9 @@ checkpoints:
       wrench_residual_Nm: 1.3622427958029288
       top1_score: -2.5744140177597234
       top3_score: -3.4572200677031844
-  allegro_full_flow_alt:
-    file: checkpoint_best.pt
-    config: config.yml
-    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
-    sha256: 2f03be115a5306ec271aa3a38838d55162579dc8d6b7653418e0d7dded0355ac
-    size_mb: 22.5
-    arch:
-      hand: allegro
-      hand_q_decoder: flow
-      wrist_frame: grasp_center
-      num_ode_steps: 10
-    source_run: equidexflow_dex_full_xhand_reach/20260526-xhand
-    reproduces_preprint_table: false
-    expected_metrics: null
-    note: flow / grasp_center variant; not part of the published table
 datasets:
   dexgraspdb_v3_allegro:
-    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    drive_id: 12llA2SPhvS5pqE7tutr6fwMBOLmDmHLr
     sha256: 9bff643d44f89fb0b7db1fc6048a667000cf85c8b8c0ebbb40b04a5775ea174e
     size_mb: 3
     n_objects: 81
@@ -114,7 +97,7 @@ datasets:
     split: test-only (811 of 8099)
     note: test split only (811 grasps); set DexGraspDBDataset(pre_split=True). Full data regenerable via FRoGGeR.
   dexgraspdb_v3_leap:
-    drive_id: REPLACE_WITH_GDRIVE_FILE_ID
+    drive_id: 1Mj4meWzq9h_wh5xZCN0Gel-nubjhBWkK
     sha256: 98b5ad9c5637e5716789076e9b234dad511b33b39450fdb302caa03ca0a6de9d
     size_mb: 3
     n_objects: 82
