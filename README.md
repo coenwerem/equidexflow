@@ -5,7 +5,7 @@
 **SE(3)-equivariant 6-DoF dexterous grasp generative flows**
 
 [Project page](https://equidexflow.github.io) &nbsp;·&nbsp;
-[Paper (arXiv, coming soon)](#) &nbsp;·&nbsp;
+[Paper (arXiv)](#) &nbsp;·&nbsp;
 [Data](#pretrained-checkpoints--datasets) &nbsp;·&nbsp;
 License: MIT &nbsp;·&nbsp;
 Python ≥ 3.10 &nbsp;·&nbsp;
@@ -16,17 +16,16 @@ PyTorch ≥ 2.0
 </div>
 
 EquiDexFlow takes an object point cloud and produces, in a single forward
-pass: a wrist SE(3) pose, $n_h$ joint angles from a conditional normalizing
+pass: a wrist SE(3) pose, $D$ joint angles from a conditional normalizing
 flow, a set of $n_c$ contact points projected onto the object surface, and
 per-contact forces projected into the friction cone — all jointly consistent
 with the learned distribution. The released Allegro checkpoints use
-$n_h{=}16$ and $n_c{=}5$. Both are set per-hand in the model config.
+$D{=}16$ and $n_c{=}4$. Both are set per-hand in the model config.
 
 ---
 
 ## Quickstart
-
-Three lines from a fresh checkout to a posed-hand preview PNG:
+Getting from a fresh checkout to a posed-hand preview PNG is easy with the bundled code. You can do it in three lines:
 
 ```bash
 pip install -e ".[demo]"
@@ -66,15 +65,14 @@ pip install -e .              # pure inference (torch, numpy, scipy, omegaconf, 
 pip install -e ".[demo]"      # + trimesh / open3d / matplotlib / gdown  (recommended)
 pip install -e ".[all]"       # + training / dataset loaders / plotting
 
-equidexflow-info              # smoke test: print version, CUDA, present checkpoints
+equidexflow-info              # quick sanity test: print version, CUDA, present checkpoints
 ```
 
 CUDA is auto-detected. CPU works for inference but is slow for the ODE
 solver at full sample counts. The extras (`data`, `train`, `viz`, `demo`)
 are defined in `pyproject.toml`.
 
-## Pretrained checkpoints & datasets
-
+## Pretrained Checkpoints & Datasets
 Both are released on Google Drive and pinned by sha256 in
 [`checkpoints/MANIFEST.yaml`](checkpoints/MANIFEST.yaml). A file already on
 disk with the correct hash is left untouched on re-download.
@@ -91,10 +89,8 @@ The released dataset is the **10% test split** (811 grasps per hand) used
 to produce the paper's results table. The remaining 90% (training and
 validation) was generated with an internal grasp-synthesis pipeline that
 is not part of this release. The published checkpoints are the artifacts
-of that training run.
-
-A few example object meshes are bundled under `assets/objects/` — enough
-to drive the demo CLI and the Python quickstart. Running the full
+of that training run. We bundle a few example object meshes under `assets/objects/` that are sufficient
+for the demo CLI and the Python quickstart. Running the full
 evaluation against the released test split additionally requires the
 corresponding object meshes (YCB, EGAD, and GraspIt primitives) on disk.
 Point `EQUIDEXFLOW_OBJECTS_DIR` at a directory holding those source
@@ -104,9 +100,9 @@ meshes:
 export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects
 ```
 
-## Demo and visualization
+## Demo and Visualization
 
-`equidexflow-demo` is the front door: mesh in, grasps + preview out.
+`equidexflow-demo` is the demo entry point: mostly watertight mesh in, grasps and preview out.
 
 ```bash
 # Default: 8 grasps, headless 2-pane preview PNG
@@ -128,8 +124,7 @@ g.files  # ['wrist_pose', 'hand_q', 'contacts', 'forces', 'contact_logits',
          #  'hand_sphere_xyz', 'hand_sphere_radii']
 ```
 
-## Hardware results
-
+## Hardware Results
 Allegro grasps produced by this codebase were retargeted via inverse
 kinematics to a physical [LEAP Hand](https://leaphand.com/) mounted on a
 6-DoF [FAIR Innovation FR3 cobot](https://www.frtech.fr/FR/5.html), and
@@ -148,14 +143,13 @@ controller stack used to drive the physical hand is platform-specific and
 is not part of this release. This repository ships the grasp-generation
 model whose outputs were executed in those clips.
 
-## Reproducing the paper's table
-
+## Reproducing the Paper's Results
 This release reproduces the **model-side** numbers in the paper: the
 grasp-quality table over the four ablations on the 81-object test split,
 the per-metric contact / force / rollout / equivariance / diversity
 breakdowns, and the inference-time ablations.
 
-One command after `download_checkpoints` + `download_assets`:
+One command after `download_checkpoints` and `download_assets`:
 
 ```bash
 ./scripts/reproduce.sh                 # CPU/GPU autodetect
@@ -174,7 +168,6 @@ for this release. The released checkpoints are the same ones that
 produced those results.
 
 ## Repo Layout
-
 ```
 equidexflow/
 ├── src/equidexflow/        # model + API (pure torch/numpy/scipy)
@@ -203,14 +196,14 @@ equidexflow/
 
 ## Acknowledgments
 
-This codebase is a dexterous extension of
+This codebase is a Coulomb-compliant, contact-geometry-aware dexterous extension of
 [**EquiGraspFlow**](https://github.com/bdlim99/EquiGraspFlow) (Lim et al.,
 CoRL 2024), used under the MIT License. The SE(3)-equivariant
 flow-matching backbone, VN-DGCNN encoder, Lie-group utilities, ODE solvers,
 and SE(3) base distributions originate upstream. See [`NOTICE`](NOTICE) for
 a per-file breakdown. The encoders themselves build on Vector Neurons
 (Deng et al., 2021) and DGCNN (Wang et al., 2019). The ground-truth grasps
-used to train the released checkpoints were synthesized with FRoGGeR
+used to train the released checkpoints were synthesized with (https://github.com/alberthli/frogger)[FRoGGeR]
 (Li et al., 2023). Hardware results in the paper were executed on the
 LEAP Hand (Shaw et al., 2023). We thank the maintainers of PyTorch,
 Open3D, trimesh, and Drake.
