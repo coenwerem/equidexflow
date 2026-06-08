@@ -203,7 +203,7 @@ flow-matching backbone, VN-DGCNN encoder, Lie-group utilities, ODE solvers,
 and SE(3) base distributions originate upstream. See [`NOTICE`](NOTICE) for
 a per-file breakdown. The encoders themselves build on Vector Neurons
 (Deng et al., 2021) and DGCNN (Wang et al., 2019). The ground-truth grasps
-used to train the released checkpoints were synthesized with [https://github.com/alberthli/frogger])(FRoGGeR)
+used to train the released checkpoints were synthesized with [FRoGGeR](https://github.com/alberthli/frogger)
 (Li et al., 2023). Hardware results in the paper were executed on the
 LEAP Hand (Shaw et al., 2023). We thank the maintainers of PyTorch,
 Open3D, trimesh, and Drake.
