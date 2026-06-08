@@ -15,9 +15,8 @@ PyTorch ≥ 2.0
 
 </div>
 
-EquiDexFlow takes an object point cloud and produces, in a single forward
-pass: a wrist SE(3) pose, $D$ joint angles from a conditional normalizing
-flow, a set of $n_c$ contact points projected onto the object surface, and
+EquiDexFlow takes an object point cloud and a kinematic model of a \(D\)-DoF, \(N_f\)-fingered robotic hand and produces, in a single forward pass: a wrist SE(3) pose, $D$ joint angles from a conditional normalizing
+flow, a set of $M \le N_f$ contact points projected onto the object surface, and
 per-contact forces projected into the friction cone — all jointly consistent
 with the learned distribution. The released Allegro checkpoints use
 $D{=}16$ and $n_c{=}4$. Both are set per-hand in the model config.
@@ -50,9 +49,9 @@ grasps = model.sample(pc, num_samples=10)                # list[dict] of length 
 g = grasps[0]
 g["wrist_pose"]    # (4, 4)  SE(3) wrist pose
 g["hand_q"]        # (16,)   joint angles
-g["contacts"]      # (5, 3)  surface-projected fingertip contacts
-g["forces"]        # (5, 3)  friction-cone-projected contact forces
-g["contact_logits"]# (5,)    per-finger confidence
+g["contacts"]      # (M, 3)  surface-projected fingertip contacts; one contact per finger => M = 4 (LEAP, Allegro)
+g["forces"]        # (M, 3)  friction-cone-projected contact forces
+g["contact_logits"]# (M,)    per-finger confidence
 ```
 
 ## Installation
@@ -204,6 +203,6 @@ and SE(3) base distributions originate upstream. See [`NOTICE`](NOTICE) for
 a per-file breakdown. The encoders themselves build on Vector Neurons
 (Deng et al., 2021) and DGCNN (Wang et al., 2019). The ground-truth grasps
 used to train the released checkpoints were synthesized with [FRoGGeR](https://github.com/alberthli/frogger)
-(Li et al., 2023). Hardware results in the paper were executed on the
-LEAP Hand (Shaw et al., 2023). We thank the maintainers of PyTorch,
+(Li et al., IROS 2023). Hardware results in the paper were executed on the
+LEAP Hand (Shaw et al., RSS 2023). We thank the maintainers of PyTorch,
 Open3D, trimesh, and Drake.
