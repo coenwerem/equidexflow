@@ -107,7 +107,7 @@ checkpoints:
 datasets:
   dexgraspdb_v3_allegro:
     drive_id: REPLACE_WITH_GDRIVE_FILE_ID
-    sha256: REPLACE_AFTER_FREEZE
+    sha256: 5a7aa937d6ba920c2c22bdfd76dc6a42b4afa09e7cf973a0d3d3016fa93b06a8
     size_mb: 22
     n_objects: 81
     n_grasps: 8099
@@ -115,7 +115,7 @@ datasets:
     note: default training data (FRoGGeR-synthesized); see data/README.md schema
   dexgraspdb_v3_leap:
     drive_id: REPLACE_WITH_GDRIVE_FILE_ID
-    sha256: REPLACE_AFTER_FREEZE
+    sha256: 9288c4184138191988ed390de5fc24ac22433fd1bad1f254c62457931e6eb6c4
     size_mb: 22
     n_objects: 82
     note: LEAP training data
