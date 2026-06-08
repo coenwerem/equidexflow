@@ -23,3 +23,6 @@ dist/
 .venv/
 .pytest_cache/
 .ruff_cache/
+
+# Local-only alt variant (Real-NVP flow / grasp_center frame); not part of release
+checkpoints/allegro_full_flow_alt/
