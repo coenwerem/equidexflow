@@ -4,16 +4,22 @@ Model-side (no-Drake) reproduction. One environment:
 
 ```bash
 pip install -e .[train,viz]
-export EQUIDEXFLOW_DATA_DIR=/path/to/datasets      # dexgraspdb/v3/<hand>/*.json (Drive: download_assets.py)
-export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects     # object meshes
-python checkpoints/download_checkpoints.py --all     # or copy frozen .pt in
+python checkpoints/download_checkpoints.py --all     # 5 .pt files into checkpoints/<key>/
+python scripts/download_assets.py --all              # 2 test-split tarballs into data/dexgraspdb/v3/<hand>/
+export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects      # object meshes (YCB + EGAD + GraspIt primitives)
 ```
+
+The released datasets contain **only the 10% test split** (811 grasps per hand) used to
+produce the paper's `tab:results`. Pass `--pre-split` to the eval scripts so they treat
+the on-disk data as the test set directly instead of re-partitioning it (which would
+otherwise split 811 grasps 80/10/10 and eval on ~82). Full 80/10/10 data is regenerable
+via the FRoGGeR fork (`frogger.ablation_runner` + `export_dexgraspdb.py`).
 
 ## Model-side artifacts (reproduced in this repo)
 
 | Artifact | Command |
 |----------|---------|
-| Grasp-quality table (4 variants, 81-obj test) | `python scripts/run_full_eval.py --hand allegro --device 0` |
+| Grasp-quality table (4 variants, 81-obj test) | `python scripts/run_full_eval.py --hand allegro --device 0 --pre-split` |
 | Per-metric contacts/forces/rollout | `python scripts/{eval_contacts,eval_forces,eval_rollout}.py …` |
 | Equivariance (binned residuals) | `python scripts/compute_equivariance_binned.py --checkpoint allegro_full` |
 | Diversity / coverage | `python scripts/compute_diversity.py …` |

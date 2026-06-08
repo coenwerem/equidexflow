@@ -312,6 +312,10 @@ def main():
                              "Default: all in the dataset.")
     parser.add_argument("--drop", nargs="+", default=None,
                         help="Exclude these objects (e.g. phydex).")
+    parser.add_argument("--pre-split", action="store_true",
+                        help="Set when grasp_db_dir already contains the test "
+                             "split only (e.g. the released test-only dataset "
+                             "tarball). Skips the internal RandomState(42) split.")
     args = parser.parse_args()
 
     if args.variants is None:
@@ -320,6 +324,9 @@ def main():
         suffix = "" if args.hand == "allegro" else f"_{args.hand}"
         args.out = FROGGER_OUT / f"results_table_81obj{suffix}.yaml"
     test_config = _test_config(args.hand)
+    if args.pre_split:
+        test_config["dataset"]["pre_split"] = True
+        print("  pre_split=True: treating grasp_db_dir as the test split itself")
     if args.objects:
         names = list(args.objects)
         if args.drop:

@@ -203,6 +203,7 @@ class DexGraspDBDataset(Dataset):
         object_names: Optional[Sequence[str]] = None,
         use_frogger_primitive_specs: bool = False,
         wrist_frame: str = "base",
+        pre_split: bool = False,
     ) -> None:
         """
         Parameters
@@ -214,6 +215,12 @@ class DexGraspDBDataset(Dataset):
             (dataset-mean contact centroid). When ``'grasp_center'``, the wrist
             pose target is relabeled so the SE(3) flow predicts a frame at the
             grasp center instead of the palm, shrinking the rotation-error lever.
+        pre_split : if True, treat the loaded grasps as ALREADY belonging to
+            ``split`` (i.e., the directory on disk already contains only that
+            split's grasps). The internal RandomState(42) split is skipped.
+            Use this when shipping a test-only data release: point at the
+            released test tarball and set ``pre_split=True, split='test'``
+            and the loader uses all loaded grasps as the test set.
         """
         super().__init__()
 
@@ -258,18 +265,21 @@ class DexGraspDBDataset(Dataset):
         # Deterministic train / val / test split
         # ------------------------------------------------------------------
         n_total = len(self._all_grasps)
-        n_train = int(n_total * train_ratio)
-        n_val = int(n_total * val_ratio)
-
-        rng = np.random.RandomState(42)
-        shuffled = rng.permutation(n_total)
-
-        if split == "train":
-            self.indices = shuffled[:n_train]
-        elif split == "val":
-            self.indices = shuffled[n_train : n_train + n_val]
-        else:  # test
-            self.indices = shuffled[n_train + n_val :]
+        if pre_split:
+            # The on-disk directory is the released test (or train/val) split
+            # itself; don't re-partition. Use every loaded grasp.
+            self.indices = np.arange(n_total)
+        else:
+            n_train = int(n_total * train_ratio)
+            n_val = int(n_total * val_ratio)
+            rng = np.random.RandomState(42)
+            shuffled = rng.permutation(n_total)
+            if split == "train":
+                self.indices = shuffled[:n_train]
+            elif split == "val":
+                self.indices = shuffled[n_train : n_train + n_val]
+            else:  # test
+                self.indices = shuffled[n_train + n_val :]
 
     # ------------------------------------------------------------------
     # Internal helpers

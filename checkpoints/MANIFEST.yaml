@@ -107,15 +107,15 @@ checkpoints:
 datasets:
   dexgraspdb_v3_allegro:
     drive_id: REPLACE_WITH_GDRIVE_FILE_ID
-    sha256: 5a7aa937d6ba920c2c22bdfd76dc6a42b4afa09e7cf973a0d3d3016fa93b06a8
-    size_mb: 22
+    sha256: 9bff643d44f89fb0b7db1fc6048a667000cf85c8b8c0ebbb40b04a5775ea174e
+    size_mb: 3
     n_objects: 81
-    n_grasps: 8099
-    split: 80/10/10
-    note: default training data (FRoGGeR-synthesized); see data/README.md schema
+    n_grasps: 811
+    split: test-only (811 of 8099)
+    note: test split only (811 grasps); set DexGraspDBDataset(pre_split=True). Full data regenerable via FRoGGeR.
   dexgraspdb_v3_leap:
     drive_id: REPLACE_WITH_GDRIVE_FILE_ID
-    sha256: 9288c4184138191988ed390de5fc24ac22433fd1bad1f254c62457931e6eb6c4
-    size_mb: 22
+    sha256: 98b5ad9c5637e5716789076e9b234dad511b33b39450fdb302caa03ca0a6de9d
+    size_mb: 3
     n_objects: 82
-    note: LEAP training data
+    note: test split only (811 grasps); set DexGraspDBDataset(pre_split=True). Full data regenerable via FRoGGeR.
