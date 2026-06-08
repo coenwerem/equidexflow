@@ -28,8 +28,7 @@ demo = ["trimesh", "open3d>=0.16", "gdown"]             # mesh -> grasps -> pose
 all = ["equidexflow[data,train,viz,demo]"]
 
 [project.scripts]
-equidexflow-train = "equidexflow.cli.train:main"
-equidexflow-eval = "equidexflow.cli.eval:main"
+equidexflow-info = "equidexflow.cli.info:main"
 equidexflow-demo = "equidexflow.cli.demo:main"
 
 [tool.setuptools.packages.find]

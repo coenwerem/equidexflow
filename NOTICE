@@ -27,6 +27,5 @@ New in EquiDexFlow:
   src/equidexflow/physics/scorer.py
   src/equidexflow/trainers/dex_trainer.py
 
-The default training data is produced by FRoGGeR (Li et al.), but EquiDexFlow
-does not depend on FRoGGeR at runtime: it consumes a documented JSON grasp
+The default training data is produced using a modified local fork of FRoGGeR (Li et al.), but EquiDexFlow does not depend on FRoGGeR at runtime: it consumes a documented JSON grasp
 schema (see data/README.md) that any synthesis backbone can emit.
