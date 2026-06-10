@@ -1,4 +1,4 @@
-# Data Format — the EquiDexFlow grasp schema
+# Data Format - the EquiDexFlow grasp schema
 
 EquiDexFlow does not depend on FRoGGeR. It consumes a documented JSON grasp
 schema; FRoGGeR is just the default generator. Any synthesis backbone (BODex,

@@ -2,7 +2,7 @@
 """Plot training curves for the EquiDexFlow flow model (hand_q NLL variant).
 
 Shows validation losses vs training step for the Conditional RealNVP run.
-Parses logging.log directly — no TensorBoard dependency.
+Parses logging.log directly - no TensorBoard dependency.
 
 Usage:
     ~/frogger_env/bin/python scripts/equidex/plot_flow_training.py

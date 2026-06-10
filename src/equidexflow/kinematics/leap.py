@@ -55,7 +55,7 @@ import torch.nn as nn
 # spread), which is what keeps the predicted fingers on the object. The offset
 # is a FIXED rigid translation in the base frame: the dataset-mean
 # fingertip-centroid expressed in leap_hand_base (measured over all 8110
-# v3/leap grasps). Pure relabel — orientation unchanged, only the origin moves.
+# v3/leap grasps). Pure relabel - orientation unchanged, only the origin moves.
 # ---------------------------------------------------------------------------
 LEAP_GRASP_CENTER_OFFSET = (0.1144, 0.0129, 0.0759)  # metres, base frame
 
@@ -107,7 +107,7 @@ def _T_urdf(pos: list[float], rpy: list[float] | None = None) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# Hard-coded constant transforms (extracted from URDF — do NOT parse at runtime)
+# Hard-coded constant transforms (extracted from URDF - do NOT parse at runtime)
 # ---------------------------------------------------------------------------
 
 # leap_hand_base -> palm_lower (fixed)
@@ -301,7 +301,7 @@ class LeapFK(nn.Module):
         self.register_buffer("_sphere_radii",
                               torch.tensor([s["radius_m"] for s in body_spheres],
                                            dtype=torch.float32))
-        # Tip-sphere radius — registered as a buffer so `.to(device)` moves
+        # Tip-sphere radius - registered as a buffer so `.to(device)` moves
         # it alongside the other tensors used in forward_all_spheres.
         self.register_buffer("_fingertip_radius",
                               torch.tensor(0.008, dtype=torch.float32))
@@ -383,7 +383,7 @@ class LeapFK(nn.Module):
         return torch.stack([tip_idx, tip_mid, tip_ring, tip_thumb], dim=1)
 
     # ------------------------------------------------------------------
-    # All collision spheres (link bodies + fingertips) — for collision loss
+    # All collision spheres (link bodies + fingertips) - for collision loss
     # ------------------------------------------------------------------
 
     @property

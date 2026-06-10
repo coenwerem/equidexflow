@@ -1,4 +1,4 @@
-# Full variant — re-train with wrist-conditioned hand_q and contact decoders.
+# Full variant - re-train with wrist-conditioned hand_q and contact decoders.
 #
 # Architectural fix:
 #   - hand_q_decoder now takes (z, wrist_pose); fresh init

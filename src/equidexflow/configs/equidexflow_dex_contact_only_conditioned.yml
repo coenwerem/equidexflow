@@ -1,4 +1,4 @@
-# ContactOnly — re-train with wrist-conditioned hand_q + contact decoders.
+# ContactOnly - re-train with wrist-conditioned hand_q + contact decoders.
 # Warm-starts from the original ContactOnly checkpoint; fresh hand_q + contact heads.
 model:
   name: equidexflow_dex

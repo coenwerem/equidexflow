@@ -1,4 +1,4 @@
-# PoseOnly variant — retrain after HandQDecoder scaled-sigmoid fix
+# PoseOnly variant - retrain after HandQDecoder scaled-sigmoid fix
 model:
   name: equidexflow_dex
   p_uncond: 0.1

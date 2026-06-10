@@ -1,4 +1,4 @@
-# GeomOnly-81 — re-train with wrist-conditioned hand_q and contact decoders.
+# GeomOnly-81 - re-train with wrist-conditioned hand_q and contact decoders.
 # Warm-starts from the original GeomOnly-81 checkpoint; fresh hand_q + contact heads.
 model:
   name: equidexflow_dex

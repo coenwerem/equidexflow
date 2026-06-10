@@ -38,12 +38,12 @@ def fetch_one(key: str, entry: dict) -> bool:
     want = entry.get("sha256")
 
     if dest.is_file() and want and want != "REPLACE_AFTER_FREEZE" and sha256(dest) == want:
-        print(f"[{key}] present and verified — skipping")
+        print(f"[{key}] present and verified - skipping")
         return True
 
     drive_id = entry.get("drive_id")
     if not drive_id or drive_id == _PLACEHOLDER:
-        print(f"[{key}] MISSING drive_id in MANIFEST.yaml — "
+        print(f"[{key}] MISSING drive_id in MANIFEST.yaml - "
               f"upload {dest} and paste its id, or copy the file in manually.")
         return False
 

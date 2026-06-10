@@ -1,4 +1,4 @@
-# Allegro "Full" variant — flow hand_q decoder + reach loss + grasp-center frame.
+# Allegro "Full" variant - flow hand_q decoder + reach loss + grasp-center frame.
 #
 # Fixes deterministic hand_q decoder mode-collapse: the deterministic decoder
 # outputs a near-constant pose (per-joint std ~0.01 rad vs GT ~0.5 rad),

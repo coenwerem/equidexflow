@@ -95,7 +95,7 @@ training:
   lr: 1.0e-4
   weight_decay: 1.0e-6
   epochs: 1000
-  batch_size: 2           # informational — batch_size is set per split in data above
+  batch_size: 2           # informational - batch_size is set per split in data above
 
   loss_weights:
     flow: 1.0

@@ -1,4 +1,4 @@
-# Full variant — train from scratch with the EquiGraspFlow §4.2 centering
+# Full variant - train from scratch with the EquiGraspFlow §4.2 centering
 # fix in the dataloader (subtract point-cloud mean from BOTH points AND
 # targets; small SE(3) translation augmentation during training).
 #

@@ -2,9 +2,9 @@
 """Inference-time ablations for EquiDexFlow (no retraining required).
 
 Three ablations on the Full-variant checkpoint:
-  1. Cone projection OFF  — raw force vectors, no friction cone enforcement
-  2. Wrist projection ON  — apply SDF-based wrist slide to each candidate
-  3. Flow deterministic   — z=0 mode instead of stochastic sampling (hand_q)
+  1. Cone projection OFF - raw force vectors, no friction cone enforcement
+  2. Wrist projection ON - apply SDF-based wrist slide to each candidate
+  3. Flow deterministic - z=0 mode instead of stochastic sampling (hand_q)
 
 All use the same 81-object test set and scoring as run_full_eval.py.
 
@@ -97,7 +97,7 @@ def patch_cone_off(model) -> Callable:
         x = fd.vn_hidden(z_flat)
         f_raw = fd.vn_out(x).squeeze(1)
         f_raw = f_raw.reshape(B, nf, 3)
-        # Skip cone_project — return raw forces
+        # Skip cone_project - return raw forces
         if return_local:
             return f_raw, None
         return f_raw

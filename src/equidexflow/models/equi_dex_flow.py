@@ -3,9 +3,9 @@ EquiDexFlow (dexterous variant): SE(3)-equivariant flow-matching model for
 dexterous grasp generation with the RealHand L6.
 
 Generates the joint distribution  p(q, C, F | O)  where:
-  q — wrist SE(3) pose (via flow backbone) + hand joint angles (11 DOF)
-  C — fingertip contact positions (5 x 3)
-  F — contact forces (5 x 3)
+  q - wrist SE(3) pose (via flow backbone) + hand joint angles (11 DOF)
+  C - fingertip contact positions (5 x 3)
+  F - contact forces (5 x 3)
 
 The flow backbone is identical to the original EquiDexFlow in equi_grasp_flow.py
 (SE(3) ODE on wrist pose).  Three additional decoder heads branch off the
@@ -88,12 +88,12 @@ class EquiDexFlow(nn.Module):
 
     Parameters
     ----------
-    encoder        : VNDGCNNEncoder  — (B,3,N)  ->  (B,C,3)
-    vector_field   : VNVectorFields  — SE(3) velocity field for wrist flow
+    encoder        : VNDGCNNEncoder - (B,3,N)  ->  (B,C,3)
+    vector_field   : VNVectorFields - SE(3) velocity field for wrist flow
     ode_solver     : SE3_Euler | SE3_RK4_MK
     contact_decoder: ContactDecoder
     force_decoder  : ForceDecoder
-    hand_q_decoder : HandQDecoder    — (B,C*3)  ->  (B,11)
+    hand_q_decoder : HandQDecoder - (B,C*3)  ->  (B,11)
     n_fingers      : int (default 5)
     hand_dof       : int (default 11)
     p_uncond       : classifier-free guidance drop probability
@@ -297,7 +297,7 @@ class EquiDexFlow(nn.Module):
 
         # ---- Reach loss at flow-interpolant wrist x_t -------------------------
         # The old reach loss used GT wrist for FK, but at inference the wrist
-        # comes from the ODE — so the decoder never learned to reach from an
+        # comes from the ODE - so the decoder never learned to reach from an
         # imperfect wrist. Using x_t (already computed, free) teaches the
         # decoder to produce hand_q that reaches contacts from whatever wrist
         # the flow produces at arbitrary denoising progress t.

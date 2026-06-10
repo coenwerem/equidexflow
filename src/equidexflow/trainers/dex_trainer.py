@@ -1,4 +1,4 @@
-"""DexGraspTrainer — training and evaluation loop for EquiDexFlow.
+"""DexGraspTrainer - training and evaluation loop for EquiDexFlow.
 
 Orchestrates:
   • full training loop with per-step weighted loss computation
@@ -13,7 +13,7 @@ Design notes
 * The per-finger valid mask is derived from dataset finger assignments. If no
     per-finger data is available, physics losses evaluate to zero rather than
     producing a spurious training signal.
-* evaluate() calls model.sample() (ODE-based — slow) only at eval_interval steps.
+* evaluate() calls model.sample() (ODE-based - slow) only at eval_interval steps.
 """
 
 from __future__ import annotations
@@ -266,7 +266,7 @@ class DexGraspTrainer:
         B = batch["object_points"].shape[0]
         gt_per_finger = _aggregate_per_finger(
             batch["contacts"], batch["finger_ids"], batch["valid_mask"]
-        )  # (B, 5, 3)  — NaN where no GT contact for that finger
+        )  # (B, 5, 3) - NaN where no GT contact for that finger
 
         errors: list[float] = []
         for k, pred in enumerate(preds):
@@ -342,7 +342,7 @@ class DexGraspTrainer:
                 model_losses["pred_contacts"],
                 model_losses["pred_normals"],
                 model_losses["pred_forces"],
-                batch["object_points"],  # (B, 3, N) — collision_penalty handles both layouts
+                batch["object_points"],  # (B, 3, N) - collision_penalty handles both layouts
                 valid_f,
                 object_point_normals=batch.get("object_point_normals"),     # (B, 3, N) outward normals
                 pred_fingertips=model_losses.get("pred_fingertips"),         # (B, 4, 3) Drake-FK derived
@@ -397,7 +397,7 @@ class DexGraspTrainer:
         contacts_f : (B, 5, 3)
         normals_f  : (B, 5, 3) unit-normalised
         forces_f   : (B, 5, 3)
-        valid_f    : (B, 5) bool — True where finger has ≥1 valid GT contact
+        valid_f    : (B, 5) bool - True where finger has ≥1 valid GT contact
         """
         B = batch["contacts"].shape[0]
         device = batch["contacts"].device

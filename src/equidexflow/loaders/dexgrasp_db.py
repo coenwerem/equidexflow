@@ -173,7 +173,7 @@ class DexGraspDBDataset(Dataset):
 
     _EGAD_ROOT: str = os.environ.get("EQUIDEXFLOW_EGAD_ROOT", os.path.expanduser("~/.cache/equidexflow/egad"))
 
-    # FRoGGeR's `_PRIMITIVE_SPECS` from frogger/ablation_runner.py — the exact
+    # FRoGGeR's `_PRIMITIVE_SPECS` from frogger/ablation_runner.py - the exact
     # generator arguments used during grasp synthesis. The on-disk
     # graspit/*.stl meshes mismatch these for `graspit_box` (axis-swapped) and
     # `sphere` (r=35mm vs r=30mm); training from the disk meshes shifts
@@ -347,7 +347,7 @@ class DexGraspDBDataset(Dataset):
                             try:
                                 mesh = trimesh.load(egad_path, force="mesh")
                                 mesh.apply_scale(0.001)
-                                # NO centering — see comment above. EGAD
+                                # NO centering - see comment above. EGAD
                                 # meshes come from the file in mm; we only
                                 # apply scale, leaving the body-frame origin
                                 # as authored.

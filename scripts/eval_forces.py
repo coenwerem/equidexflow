@@ -5,9 +5,9 @@ Metrics reported
 ----------------
 * Mean force error (N) per finger
 * Force direction error (degrees) per finger
-* Friction cone violation rate (%) — fraction of samples where at least one
+* Friction cone violation rate (%) - fraction of samples where at least one
   finger violates the Coulomb cone
-* Wrench balance residual (N·m) — mean ||G f + w_ext||₂
+* Wrench balance residual (N·m) - mean ||G f + w_ext||₂
 
 Usage
 -----
@@ -71,8 +71,8 @@ def evaluate_forces(model, loader, device, num_samples: int,
     """Top-1 predicted grasp vs nearest GT grasp, per test object.
 
     Two-pass evaluation matching eval_contacts.py:
-      Pass 1 — collect all GT (contacts, forces, normals) per object.
-      Pass 2 — for each unique object, generate top-1 prediction, find
+      Pass 1 - collect all GT (contacts, forces, normals) per object.
+      Pass 2 - for each unique object, generate top-1 prediction, find
                nearest GT grasp by contact position, compare forces
                against that GT.  Friction violation and wrench balance
                are prediction-only (no GT needed).

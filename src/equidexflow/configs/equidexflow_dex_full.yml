@@ -1,4 +1,4 @@
-# EquiDexFlow — dexterous grasp generation (full point-cloud, dexgrasp DB)
+# EquiDexFlow - dexterous grasp generation (full point-cloud, dexgrasp DB)
 # Run:
 #   python train.py --config configs/equidexflow_dex_full.yml --device 0
 
@@ -66,7 +66,7 @@ training:
   lr: 1.0e-4
   weight_decay: 1.0e-6
   epochs: 1000
-  batch_size: 2           # informational — batch_size is set per split in data above
+  batch_size: 2           # informational - batch_size is set per split in data above
 
   loss_weights:
     flow: 1.0

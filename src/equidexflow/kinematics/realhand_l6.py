@@ -6,7 +6,7 @@ Kinematic parameters are hard-coded from the MJCF:
 
 Body tree (all finger roots are direct children of the 'root' body):
 
-  root  [wrist / hand_base_link — externally provided SE(3) pose]
+  root  [wrist / hand_base_link - externally provided SE(3) pose]
   ├## thumb_metacarpals_base2  pos=[0.011508, 0.022975, 0.032794]
   │     joint: thumb_cmc_yaw   axis=[0, 0, -1]   range=[0.00, 1.54]
   │   └## thumb_metacarpals  pos=[0.0061649, 0.010678, -0.004891]
@@ -73,7 +73,7 @@ def _make_T_np(pos: list[float], quat: list[float] | None = None) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# Hard-coded constant transforms (extracted from MJCF — do NOT parse at runtime)
+# Hard-coded constant transforms (extracted from MJCF - do NOT parse at runtime)
 # ---------------------------------------------------------------------------
 # Convention: T_A_to_B  = static SE(3) from body A's origin to body B's origin,
 #             expressed in body A's local frame.
@@ -145,7 +145,7 @@ def _rot_from_axis_angle(
     axis: torch.Tensor,   # (..., 3)  unit vector
     angle: torch.Tensor,  # (...,)    radians
 ) -> torch.Tensor:        # (..., 3, 3)
-    """Rodrigues' rotation formula — differentiable."""
+    """Rodrigues' rotation formula - differentiable."""
     c = torch.cos(angle)   # (...)
     s = torch.sin(angle)   # (...)
     t = 1.0 - c            # (...)
@@ -173,17 +173,17 @@ class RealHandL6FK(nn.Module):
     """Pure-torch forward kinematics for RealHand L6 (right hand).
 
     Joint ordering (11 DOF):
-      [0]   thumb_cmc_yaw    — thumb_metacarpals_base2, axis=[0, 0, -1]
-      [1]   thumb_cmc_pitch  — thumb_metacarpals,       axis=[0, 1,  0]
-      [2]   thumb_ip         — thumb_distal,             axis=[0, 1,  0]
-      [3]   index_mcp_pitch  — index_proximal,           axis=[0, 1,  0]
-      [4]   index_dip        — index_distal,             axis=[0, 1,  0]
-      [5]   middle_mcp_pitch — middle_proximal,          axis=[0, 1,  0]
-      [6]   middle_dip       — middle_distal,            axis=[0, 1,  0]
-      [7]   ring_mcp_pitch   — ring_proximal,            axis=[0, 1,  0]
-      [8]   ring_dip         — ring_distal,              axis=[0, 1,  0]
-      [9]   pinky_mcp_pitch  — pinky_proximal,           axis=[0, 1,  0]
-      [10]  pinky_dip        — pinky_distal,             axis=[0, 1,  0]
+      [0]   thumb_cmc_yaw - thumb_metacarpals_base2, axis=[0, 0, -1]
+      [1]   thumb_cmc_pitch - thumb_metacarpals,       axis=[0, 1,  0]
+      [2]   thumb_ip - thumb_distal,             axis=[0, 1,  0]
+      [3]   index_mcp_pitch - index_proximal,           axis=[0, 1,  0]
+      [4]   index_dip - index_distal,             axis=[0, 1,  0]
+      [5]   middle_mcp_pitch - middle_proximal,          axis=[0, 1,  0]
+      [6]   middle_dip - middle_distal,            axis=[0, 1,  0]
+      [7]   ring_mcp_pitch - ring_proximal,            axis=[0, 1,  0]
+      [8]   ring_dip - ring_distal,              axis=[0, 1,  0]
+      [9]   pinky_mcp_pitch - pinky_proximal,           axis=[0, 1,  0]
+      [10]  pinky_dip - pinky_distal,             axis=[0, 1,  0]
 
     *wrist_pose* is the SE(3) pose of the 'root' / hand_base_link body
     in the world frame.  All fingertip poses are expressed in the world frame

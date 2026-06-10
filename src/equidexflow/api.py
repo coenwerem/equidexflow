@@ -1,6 +1,6 @@
 """High-level inference API: rebuild a trained model from its config + weights.
 
-The checkpoint is only a ``state_dict`` — the architecture (deterministic vs
+The checkpoint is only a ``state_dict`` - the architecture (deterministic vs
 flow joint decoder, wrist frame, hand) lives in the run's config and MUST be
 supplied to rebuild the network. ``load_checkpoint`` reads that config from a
 sibling ``*.yml`` next to the checkpoint (or one passed explicitly) and warns
@@ -96,7 +96,7 @@ def load_checkpoint(path, config=None, device="cpu", strict=False):
     if missing or unexpected:
         warnings.warn(
             f"load_checkpoint: {len(missing)} missing / {len(unexpected)} unexpected weights "
-            f"(arch/config mismatch — wrong decoder/hand/frame?). "
+            f"(arch/config mismatch - wrong decoder/hand/frame?). "
             f"missing[:3]={list(missing)[:3]} unexpected[:3]={list(unexpected)[:3]}",
             stacklevel=2,
         )

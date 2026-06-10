@@ -2,7 +2,7 @@
 
 Two subplots side by side:
   Left:  total loss, contact loss, force loss vs. steps (all variants overlaid)
-  Right: physics_wrench and physics_friction vs. steps (Full only — shows
+  Right: physics_wrench and physics_friction vs. steps (Full only - shows
          cone projection makes friction flat at zero while wrench descends)
 
 Uses TensorBoard event files from completed training runs.
@@ -73,7 +73,7 @@ def main():
     fig, axes = plt.subplots(1, 3, figsize=(7.5, 2.4))
     ax_flow, ax_force, ax_phys = axes
 
-    # (a) Flow loss — comparable across all variants
+    # (a) Flow loss - comparable across all variants
     for name, logdir in RUNS.items():
         steps, vals = load_scalars(logdir, "val/flow")
         ax_flow.plot(steps, smooth(vals, args.window), label=name,
@@ -84,7 +84,7 @@ def main():
     ax_flow.legend(loc="upper right")
     ax_flow.grid(True, alpha=0.3)
 
-    # (b) Force loss — only meaningful for GeomOnly and Full
+    # (b) Force loss - only meaningful for GeomOnly and Full
     for name in ["GeomOnly", "Full"]:
         logdir = RUNS[name]
         steps, vals = load_scalars(logdir, "val/force")
@@ -96,7 +96,7 @@ def main():
     ax_force.legend(loc="upper right")
     ax_force.grid(True, alpha=0.3)
 
-    # (c) Physics losses — Full model only
+    # (c) Physics losses - Full model only
     logdir = RUNS["Full"]
     steps_w, vals_w = load_scalars(logdir, "train/physics_wrench")
     steps_f, vals_f = load_scalars(logdir, "train/physics_friction")

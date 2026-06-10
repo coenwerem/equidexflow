@@ -63,7 +63,7 @@ class ContactDecoder(nn.Module):
         # net starts close to the previous symmetric solution).
         self.finger_embed = nn.Parameter(torch.randn(n_fingers, 1, 3) * 0.1)
 
-        # Scalar confidence head — eats SO(3)-invariant per-channel norms
+        # Scalar confidence head - eats SO(3)-invariant per-channel norms
         # (B, C) so it doesn't degenerate under augmentation.
         self.logit_mlp = nn.Sequential(
             nn.Linear(in_channels, hidden_channels),
@@ -83,7 +83,7 @@ class ContactDecoder(nn.Module):
         nf = self.n_fingers
 
         # Wrist rotation columns: 3 equivariant 3-vectors.
-        wrist_R = wrist_pose[:, :3, :3]                 # (B, 3, 3) — 3 columns of R
+        wrist_R = wrist_pose[:, :3, :3]                 # (B, 3, 3) - 3 columns of R
         wrist_t = wrist_pose[:, :3, 3].unsqueeze(1)     # (B, 1, 3)
 
         # Per-finger conditioning: tile + concat.

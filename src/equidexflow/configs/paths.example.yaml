@@ -1,0 +1,26 @@
+# EquiDexFlow - example data-path configuration.
+#
+# The dataset loaders resolve every path from two environment variables,
+# referenced inside the training / evaluation configs in this directory via
+# OmegaConf interpolation (e.g. `${oc.env:EQUIDEXFLOW_DATA_DIR}`). Export them
+# before launching scripts/train.py or the eval scripts:
+#
+#   export EQUIDEXFLOW_DATA_DIR=/path/to/datasets      # required
+#   export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects    # optional (default below)
+#
+# Expected on-disk layout:
+#
+#   $EQUIDEXFLOW_DATA_DIR/
+#   └── dexgraspdb/v3/<hand>/<object_name>.json        # one grasp file per object
+#   $EQUIDEXFLOW_OBJECTS_DIR/
+#   └── <stem>.obj | <stem>.stl                        # meshes, sampled to point clouds at load
+#
+# EQUIDEXFLOW_OBJECTS_DIR defaults to $EQUIDEXFLOW_DATA_DIR/objects when unset.
+# The per-object JSON grasp schema is documented in ../../data/README.md
+# (repo root: data/README.md).
+
+# These are the two interpolations the configs use to locate data. The
+# training configs already inline them inside their `data:` blocks; this file
+# is the standalone reference that data/README.md points to.
+data_dir:    ${oc.env:EQUIDEXFLOW_DATA_DIR}
+objects_dir: ${oc.env:EQUIDEXFLOW_OBJECTS_DIR,${oc.env:EQUIDEXFLOW_DATA_DIR}/objects}

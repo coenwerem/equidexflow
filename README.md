@@ -1,8 +1,10 @@
 <div align="center">
 
+<img src="assets/logo/equidexflow_mark.png" width="92" alt="EquiDexFlow logo" />
+
 # EquiDexFlow
 
-**SE(3)-equivariant 6-DoF dexterous grasp generative flows**
+**SE(3)-Equivariant 6-DoF Dexterous Grasp Generative Flows**
 
 [Project page](https://equidexflow.github.io) &nbsp;·&nbsp;
 [Paper (arXiv)](#) &nbsp;·&nbsp;
@@ -11,15 +13,15 @@ License: MIT &nbsp;·&nbsp;
 Python ≥ 3.10 &nbsp;·&nbsp;
 PyTorch ≥ 2.0
 
-<img src="assets/teaser/allegro_gallery_2x8.png" width="100%" alt="Allegro grasp gallery — sixteen EquiDexFlow grasps on YCB / EGAD / GraspIt primitives." />
+<img src="assets/teaser/allegro_gallery_2x8.png" width="100%" alt="Allegro grasp gallery: sixteen EquiDexFlow grasps on YCB / EGAD / GraspIt primitives." />
 
 </div>
 
-EquiDexFlow takes an object point cloud and a kinematic model of a \(D\)-DoF, \(N_f\)-fingered robotic hand and produces, in a single forward pass: a wrist SE(3) pose, $D$ joint angles from a conditional normalizing
-flow, a set of $M \le N_f$ contact points projected onto the object surface, and
-per-contact forces projected into the friction cone — all jointly consistent
+EquiDexFlow takes an object point cloud and a kinematic model of a $D$-DoF, $M$-fingered robotic hand and produces, in a single forward pass: a wrist SE(3) pose, $D$ joint angles from a conditional normalizing
+flow, a set of $M$ contact points projected onto the object surface, and
+per-contact forces projected into the friction cone, all jointly consistent
 with the learned distribution. The released Allegro checkpoints use
-$D{=}16$ and $n_c{=}4$. Both are set per-hand in the model config.
+$D{=}16$ and $M{=}4$. Both are set per-hand in the model config.
 
 ---
 
@@ -72,6 +74,12 @@ solver at full sample counts. The extras (`data`, `train`, `viz`, `demo`)
 are defined in `pyproject.toml`.
 
 ## Pretrained Checkpoints & Datasets
+
+> [!NOTE]
+> The released checkpoints are for the **Allegro Hand**. **LEAP Hand
+> checkpoints are coming soon.** The hardware results below were produced by
+> retargeting Allegro grasps to the LEAP Hand via inverse kinematics.
+
 Both are released on Google Drive and pinned by sha256 in
 [`checkpoints/MANIFEST.yaml`](checkpoints/MANIFEST.yaml). A file already on
 disk with the correct hash is left untouched on re-download.
@@ -123,24 +131,49 @@ g.files  # ['wrist_pose', 'hand_q', 'contacts', 'forces', 'contact_logits',
          #  'hand_sphere_xyz', 'hand_sphere_radii']
 ```
 
-## Hardware Results
+## Hardware & Simulation Results
+
+### Hardware Execution
 Allegro grasps produced by this codebase were retargeted via inverse
 kinematics to a physical [LEAP Hand](https://leaphand.com/) mounted on a
-6-DoF [FAIR Innovation FR3 cobot](https://www.frtech.fr/FR/5.html), and
-executed on two objects (a box primitive and the YCB potted-meat can) at
-two object rotations (0°, 120°):
+6-DoF [FAIR Innovation FR3 cobot](https://www.frtech.fr/FR/5.html) and
+executed across several objects. Each co-transformed grasp runs at both
+0° and 120° object orientations **without re-planning**: the grasp
+co-rotates with the object by equivariance:
 
 <p align="center">
-  <img src="assets/teaser/hardware_2x2.gif" width="75%" alt="2x2 hardware execution panel: box primitive and potted-meat can, each at 0 and 120 deg, on a LEAP Hand." />
+  <img src="assets/teaser/hardware_2x2.gif" width="72%" alt="2x2 hardware execution panel: box primitive and potted-meat can, each at 0 and 120 deg, on a LEAP Hand." />
   <br/>
   <sub><b>Top row:</b> box primitive at 0° / 120°. &nbsp; <b>Bottom row:</b> potted-meat can at 0° / 120°.</sub>
 </p>
 
-Higher-resolution MP4 versions are on the
+More objects, a cube primitive plus two rotation-symmetric objects:
+
+<p align="center">
+  <video src="assets/teaser/hardware_more_3up.mp4" controls muted loop width="80%"></video>
+  <br/>
+  <sub>Left to right: cube primitive, cylinder primitive, tennis ball.</sub>
+</p>
+
+### Simulation: Shake-Test Robustness
+In simulation, we stress test decoded grasps in [Drake](https://drake.mit.edu/) with the
+GenDexGrasp/GAGrasp shake protocol: gravity is disabled and a ±*xyz*
+inertial load is applied to the object along all six axes. A grasp passes
+if the object drifts under 2 cm in every direction. The held object stays
+nearly stationary throughout.
+
+<p align="center">
+  <video src="assets/teaser/sim_shake_3up.mp4" controls muted loop width="80%"></video>
+  <br/>
+  <sub>Left to right: mustard bottle (0°, 3.2&nbsp;mm max drift), potted-meat can (0°, 0.9&nbsp;mm), potted-meat can (120°, 9.2&nbsp;mm), all pass (&lt; 2&nbsp;cm).</sub>
+</p>
+
+Higher-resolution clips and the full set are on the
 [project page](https://equidexflow.github.io). The retargeting and
-controller stack used to drive the physical hand is platform-specific and
-is not part of this release. This repository ships the grasp-generation
-model whose outputs were executed in those clips.
+controller stack used to drive the physical hand, and the Drake validation
+harness, are platform-specific and are not part of this release. This
+repository ships the grasp-generation model whose outputs were executed
+and validated in these clips.
 
 ## Reproducing the Paper's Results
 This release reproduces the **model-side** numbers in the paper: the
@@ -166,6 +199,64 @@ simulators and a platform-specific controller stack that are out of scope
 for this release. The released checkpoints are the same ones that
 produced those results.
 
+## Bring Your Own Data
+
+The trainer is not tied to FRoGGeR: it reads a documented JSON grasp schema,
+so a dataset from any source can train the model as long as it is written in
+that schema. FRoGGeR is just the default emitter behind the released
+checkpoints.
+
+**What this repo ships for this:**
+- the grasp schema specification: [`data/README.md`](data/README.md) (fields,
+  units, frames, minimum record);
+- the loader that consumes it: `DexGraspDBDataset`
+  (`src/equidexflow/loaders/dexgrasp_db.py`), with contact forces computed at
+  load time and object meshes optional;
+- the training entry point and runnable configs:
+  [`scripts/train.py`](scripts/train.py) and
+  `src/equidexflow/configs/equidexflow_dex_*.yml`;
+- an example data-path file:
+  [`src/equidexflow/configs/paths.example.yaml`](src/equidexflow/configs/paths.example.yaml).
+
+**What you provide:** the per-object JSON files (and, optionally, meshes),
+written in the schema, one file per object under
+`$EQUIDEXFLOW_DATA_DIR/dexgraspdb/v3/<hand>/<object>.json`. Minimum viable
+per-grasp record:
+
+```json
+{
+  "contact_points_mm": [[x, y, z], ...],     // (Nf, 3) mm, object frame
+  "contact_normals":   [[nx, ny, nz], ...],  // (Nf, 3) unit, inward
+  "hand_dof_values":   [q0, ..., q15],        // (D,) radians, Drake joint order
+  "epsilon_quality":   0.012,                 // force-closure metric (scalar)
+  "volume_quality":    1.5e-5                  // wrench-cone volume (scalar)
+}
+```
+
+Recommended (improves quality): `wrist_pose_object` (4×4 SE(3)),
+`contact_finger_ids`, and a discoverable object mesh. Contact forces are
+**computed at load time** from the contacts, normals, friction `mu`, and object
+mass, not stored. The frame-centering convention (you do not pre-center) and
+mesh-stem resolution are documented in [`data/README.md`](data/README.md).
+
+**Train on it:**
+
+```bash
+export EQUIDEXFLOW_DATA_DIR=/path/to/datasets     # holds dexgraspdb/v3/<hand>/*.json
+export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects   # meshes for point-cloud sampling (optional)
+python scripts/train.py --config src/equidexflow/configs/equidexflow_dex_full.yml
+```
+
+Edit the config's `data:` block to point `grasp_db_dir` at your `<hand>` and to
+set `mu`, object mass, point count, splits (`pre_split: true` for
+already-split data), and object subset.
+
+> [!NOTE]
+> No format converter is bundled. You emit the schema yourself. The reference
+> emitter (FRoGGeR's min-weight-metric adapter,
+> `frogger/equidex/dexgraspdb_adapter.py`) lives in the FRoGGeR repo, not here;
+> mirror its field mapping to export from another backbone.
+
 ## Repo Layout
 ```
 equidexflow/
@@ -177,8 +268,8 @@ equidexflow/
 │   └── cli/                # equidexflow-demo, equidexflow-info
 ├── scripts/                # train.py, run_full_eval.py, eval_*, plot/, reproduce.sh
 ├── checkpoints/            # MANIFEST.yaml and downloader. <variant>/{best.pt, config.yml}
-├── data/dexgraspdb/v3/     # downloaded test-split tarballs will be saved here
-├── assets/                 # hand URDFs + mesh primitives + teaser images
+├── data/dexgraspdb/v3/     # downloaded test-split tarballs (see data/README.md for the schema)
+├── assets/                 # hand URDFs + mesh primitives + logo + teaser media
 └── tests/                  # pytest
 ```
 

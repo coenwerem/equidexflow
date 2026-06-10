@@ -49,7 +49,7 @@ def fetch_one(key: str, entry: dict) -> bool:
     else:
         drive_id = entry.get("drive_id")
         if not drive_id or drive_id == _PLACEHOLDER:
-            print(f"[{key}] MISSING drive_id in MANIFEST.yaml — "
+            print(f"[{key}] MISSING drive_id in MANIFEST.yaml - "
                   f"upload {tarball.name} and paste its id, or copy the tarball in manually.")
             return False
         try:

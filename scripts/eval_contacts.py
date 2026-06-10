@@ -9,7 +9,7 @@ Metrics reported
 ----------------
 * Per-finger mean contact position error (metres)
 * Per-finger std
-* Contact coverage rate — fraction of fingers whose predicted contact
+* Contact coverage rate - fraction of fingers whose predicted contact
   lies within 1 cm of any GT contact for that finger
 
 Usage
@@ -69,8 +69,8 @@ def evaluate_contacts(model, loader, device, num_samples: int,
     """Top-1 predicted grasp vs nearest GT grasp, per test object.
 
     Two-pass evaluation that handles multi-modal GT correctly:
-      Pass 1 — collect all GT per-finger contacts grouped by object name.
-      Pass 2 — for each unique object, generate candidates, rank with
+      Pass 1 - collect all GT per-finger contacts grouped by object name.
+      Pass 2 - for each unique object, generate candidates, rank with
                *scorer* to pick top-1, then measure distance to the
                nearest GT grasp (min over all GT grasps for that object).
 

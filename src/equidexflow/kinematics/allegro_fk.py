@@ -141,7 +141,7 @@ def _se3_from_R_p(R: torch.Tensor, p: torch.Tensor) -> torch.Tensor:
     return T
 
 
-_MIN_LINK_LENGTH = 0.030  # 30mm — skip base links (~16mm)
+_MIN_LINK_LENGTH = 0.030  # 30mm - skip base links (~16mm)
 
 
 class AllegroRightHandFK(nn.Module):
@@ -161,9 +161,9 @@ class AllegroRightHandFK(nn.Module):
             cfg = json.load(fh)
 
         # Build (4 fingers × 4 joints) packed tensors.
-        # joint_axes_local : (16, 3) — joint axis in joint frame
-        # X_PJ_R           : (16, 3, 3) — rotation of joint frame in parent body
-        # X_PJ_p           : (16, 3) — translation of joint frame in parent body
+        # joint_axes_local : (16, 3) - joint axis in joint frame
+        # X_PJ_R           : (16, 3, 3) - rotation of joint frame in parent body
+        # X_PJ_p           : (16, 3) - translation of joint frame in parent body
         joint_axes_local = torch.zeros(self.HAND_DOF, 3)
         X_PJ_R = torch.zeros(self.HAND_DOF, 3, 3)
         X_PJ_p = torch.zeros(self.HAND_DOF, 3)

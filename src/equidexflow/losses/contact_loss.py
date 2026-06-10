@@ -33,7 +33,7 @@ def contact_position_loss(
     total_loss = pred_contacts.new_zeros(())
     n_terms = 0
 
-    # (B,) — which samples have at least one valid GT contact
+    # (B,) - which samples have at least one valid GT contact
     has_any_gt = valid_mask.any(dim=1)
 
     for f in range(n_fingers):

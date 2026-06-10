@@ -1,8 +1,8 @@
 # Checkpoints
 
 Each checkpoint is a directory `checkpoints/<key>/` holding `checkpoint_best.pt`,
-its `config.yml` (needed to rebuild the architecture), `sha256.txt`, and — for
-the published variants — a `metrics.json`. Load by key:
+its `config.yml` (needed to rebuild the architecture), `sha256.txt`, and - for
+the published variants - a `metrics.json`. Load by key:
 
 ```python
 from equidexflow import load_checkpoint
@@ -16,7 +16,7 @@ from the sibling `config.yml`, so the config **must** travel with the checkpoint
 ## Allegro (v1)
 
 The four `allegro_*` checkpoints below are exactly the runs that produced the
-preprint's `tab:results` — verified against
+preprint's `tab:results` - verified against
 `results_table_81obj_xhand.yaml` (`source_run: *_xhand/20260526`). Their
 `expected_metrics` in `MANIFEST.yaml` match the paper to 4 decimals.
 
@@ -26,7 +26,7 @@ preprint's `tab:results` — verified against
 | `allegro_geom_only` | GeomOnly ablation | deterministic | 1.58 | −3.29 | 6.5 MB |
 | `allegro_pose_only` | PoseOnly ablation | deterministic | 1.29 | −2.52 | 6.5 MB |
 | `allegro_contact_only` | ContactOnly ablation | deterministic | 1.36 | −2.57 | 6.5 MB |
-| `allegro_full_flow_alt` | alt: Real-NVP joint decoder, grasp_center | flow | — | — | 22 MB |
+| `allegro_full_flow_alt` | alt: Real-NVP joint decoder, grasp_center | flow | - | - | 22 MB |
 
 **Note on the joint decoder.** `allegro_full` (the run behind the published
 numbers) uses a *deterministic* joint decoder with the `base` wrist frame. The
@@ -36,7 +36,7 @@ of the published table. Pick one consistently before the public release.
 
 ## LEAP
 
-LEAP checkpoints come from machine B — see `docs/MACHINE_B_HANDOFF.md`. Once the
+LEAP checkpoints come from machine B - see `docs/MACHINE_B_HANDOFF.md`. Once the
 tarball lands they are frozen here as `leap_full` (+ ablations) and added to
 `MANIFEST.yaml`.
 

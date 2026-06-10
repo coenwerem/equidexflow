@@ -2,7 +2,7 @@
 Conditional RealNVP normalizing flow for hand joint angles.
 
 Replaces the deterministic FiLM MLP with a generative model that handles
-multimodal grasp distributions — multiple valid finger configurations exist
+multimodal grasp distributions - multiple valid finger configurations exist
 for the same object, and MSE averages them into a single closed-fist mean.
 
 Architecture
@@ -120,9 +120,9 @@ class HandQFlowDecoder(nn.Module):
       wrist_pose : (B, 4, 4) SE(3) wrist pose
 
     Outputs:
-      forward()  : (B, hand_dof) — mode (z=0) for FK collision during training
-      log_prob() : (B,) — per-sample log-likelihood for NLL loss
-      sample()   : (B, hand_dof) — stochastic sample for inference
+      forward()  : (B, hand_dof) - mode (z=0) for FK collision during training
+      log_prob() : (B,) - per-sample log-likelihood for NLL loss
+      sample()   : (B, hand_dof) - stochastic sample for inference
     """
 
     ALLEGRO_LOWER = [

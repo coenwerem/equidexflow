@@ -1,4 +1,4 @@
-"""CPU smoke tests — no dataset, no GPU. Run: pytest tests/test_smoke.py"""
+"""CPU smoke tests - no dataset, no GPU. Run: pytest tests/test_smoke.py"""
 import glob
 
 import torch

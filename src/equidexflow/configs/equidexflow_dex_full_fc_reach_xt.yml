@@ -1,4 +1,4 @@
-# Allegro "Full" variant — flow hand_q + reach-at-x_t + grasp-center frame.
+# Allegro "Full" variant - flow hand_q + reach-at-x_t + grasp-center frame.
 #
 # Option 2 fix: the reach loss now uses x_t (the flow interpolant at random
 # t) instead of GT wrist. This teaches the hand_q decoder to reach from

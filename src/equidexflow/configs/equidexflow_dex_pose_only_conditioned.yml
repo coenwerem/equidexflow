@@ -1,4 +1,4 @@
-# PoseOnly — re-train with wrist-conditioned hand_q decoder.
+# PoseOnly - re-train with wrist-conditioned hand_q decoder.
 # Warm-starts from the original PoseOnly checkpoint; fresh hand_q + contact heads.
 # (Contact decoder is updated even though contact loss is 0, so the new shape matches.)
 model:

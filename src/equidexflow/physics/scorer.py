@@ -95,7 +95,7 @@ class GraspScorer:
     def _estimate_normals(
         self,
         contacts: torch.Tensor,     # (K, 5, 3) or (5, 3)
-        pts_n3: torch.Tensor,        # (N, 3)  — shared centroid
+        pts_n3: torch.Tensor,        # (N, 3) - shared centroid
     ) -> torch.Tensor:
         """Estimate inward normals as direction from each contact toward centroid."""
         centroid = pts_n3.mean(dim=0)   # (3,)
@@ -218,7 +218,7 @@ class GraspScorer:
                     [self._to_tensor(c["wrist_pose"]) for c in candidates]
                 ).to(device)
                 sph_all, _ = self.fk.forward_all_spheres(hand_q_batch, wrist_batch)
-                tips = sph_all[:, -4:]  # (K, 4, 3) — last 4 spheres are fingertips
+                tips = sph_all[:, -4:]  # (K, 4, 3) - last 4 spheres are fingertips
                 gap = (tips - contacts).norm(dim=-1).mean(dim=-1)  # (K,)
                 Q_consist = -gap
 

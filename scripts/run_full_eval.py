@@ -179,7 +179,7 @@ def _safe_float(v) -> float | None:
 
 
 # ---------------------------------------------------------------------------
-# Evaluation functions (inlined — no subprocess, same process, same GPU)
+# Evaluation functions (inlined - no subprocess, same process, same GPU)
 # ---------------------------------------------------------------------------
 
 def evaluate_variant(variant: str, device: torch.device, num_samples: int,

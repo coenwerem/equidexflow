@@ -29,7 +29,7 @@ Architecture
 
 The FiLM layer is small-initialized so the network starts approximately
 in the "ignore wrist" regime (output close to encoder-only) and learns to
-use the wrist gradually — avoids early-training instability.
+use the wrist gradually - avoids early-training instability.
 """
 
 from __future__ import annotations

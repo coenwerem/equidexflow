@@ -3,7 +3,7 @@
 Per-finger force vectors are predicted by tiling global VN-DGCNN features with
 each finger's predicted contact position (as an additional equivariant vector
 channel), then running per-finger VN layers. The contact channel gives the
-decoder spatial grounding — without it, the global features are identical for
+decoder spatial grounding - without it, the global features are identical for
 all fingers and the network converges to a uniform radial-push solution.
 
 Forces are projected into the Coulomb friction cone post-hoc.

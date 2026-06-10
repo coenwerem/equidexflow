@@ -1,4 +1,4 @@
-"""``equidexflow-info`` — smoke test. Prints version, torch/CUDA, and which
+"""``equidexflow-info`` - smoke test. Prints version, torch/CUDA, and which
 frozen checkpoint variants are present locally."""
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"checkpoints      : {_CKPT_ROOT}")
     ckpts = _list_checkpoints()
     if not ckpts:
-        print("  (none — run `python checkpoints/download_checkpoints.py --all`)")
+        print("  (none - run `python checkpoints/download_checkpoints.py --all`)")
     else:
         for name, ready in ckpts:
             mark = "OK   " if ready else "miss "

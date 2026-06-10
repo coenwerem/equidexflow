@@ -1,4 +1,4 @@
-"""``equidexflow-demo`` — one-shot grasp synthesis from a mesh.
+"""``equidexflow-demo`` - one-shot grasp synthesis from a mesh.
 
 Loads an object mesh, samples a point cloud, runs the model, and writes
 per-grasp ``.npz`` files plus a single PNG preview. Pure-inference: needs
@@ -68,7 +68,7 @@ def _render_png(
     spheres_xyz: np.ndarray,
     sphere_r: np.ndarray,
 ) -> None:
-    """Two 2D orthographic projections (XY, XZ) — headless-safe; no 3D backend."""
+    """Two 2D orthographic projections (XY, XZ) - headless-safe; no 3D backend."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -160,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
     model = load_checkpoint(args.checkpoint, device=args.device)
     hand = getattr(model, "hand", None) or "allegro"
     if str(hand).lower() != "allegro":
-        print(f"[demo] WARN: checkpoint hand='{hand}' — only allegro FK is wired for the PNG render.",
+        print(f"[demo] WARN: checkpoint hand='{hand}' - only allegro FK is wired for the PNG render.",
               file=sys.stderr)
 
     pc = torch.from_numpy(pts.T).to(args.device)  # (3, N)

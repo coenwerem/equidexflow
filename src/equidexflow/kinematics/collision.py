@@ -3,14 +3,14 @@ Soft collision penalties for dexterous grasping.
 
 Two penalties are provided:
 
-1. collision_penalty — penalises fingertip penetration of the object using a
+1. collision_penalty - penalises fingertip penetration of the object using a
    signed nearest-point projection: signed distance is computed as
    ``(fingertip - nearest_point) · outward_normal``. The penalty grows
    linearly with penetration depth and is zero outside the surface. This is
    asymmetric (only penetration costs), in contrast to the old unsigned-
    distance proximity heuristic.
 
-2. self_collision_penalty — penalises fingertip pairs that are too close,
+2. self_collision_penalty - penalises fingertip pairs that are too close,
    acting as a proxy for finger self-collision.
 
 Note
@@ -18,7 +18,7 @@ Note
 The signed projection assumes outward-pointing per-point normals. For
 fingertips that are inside the object but whose nearest sample point is
 on the wrong side (rare for dense point clouds), the proxy can under-
-estimate penetration depth — true mesh SDF remains the gold standard.
+estimate penetration depth - true mesh SDF remains the gold standard.
 """
 
 from __future__ import annotations

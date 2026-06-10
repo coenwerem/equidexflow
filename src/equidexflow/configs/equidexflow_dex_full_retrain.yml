@@ -1,4 +1,4 @@
-# Full variant — retrain with multi-sphere FK collision loss.
+# Full variant - retrain with multi-sphere FK collision loss.
 # Warm-starts from the prior retrain checkpoint (post-HandQ-sigmoid + fingertip-
 # only collision).  The new collision loss covers 13 spheres: 9 intermediate-link
 # midpoint spheres + 4 fingertip spheres.  Dead zone = 0mm for link spheres,
