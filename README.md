@@ -274,7 +274,7 @@ breakdown. The encoders build on
 [Vector Neurons (Deng et al., 2021)](https://arxiv.org/abs/2104.12229)
 and [DGCNN (Wang et al., 2019)](https://arxiv.org/abs/1801.07829).
 We synthesized training grasps with
-[FRoGGeR](https://github.com/alberthli/frogger) ([(Li et al., IROS 2023)](https://arxiv.org/abs/2302.13687))
+[FRoGGeR](https://github.com/alberthli/frogger) ([Li et al., IROS 2023](https://arxiv.org/abs/2302.13687))
 and ran the hardware results on the
 [LEAP Hand (Shaw et al., RSS 2023)](https://leaphand.com).
 We thank the maintainers of PyTorch, Open3D, trimesh, and Drake.
