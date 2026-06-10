@@ -76,9 +76,7 @@ Mesh stems are resolved through a name→path map in
 `$EQUIDEXFLOW_OBJECTS_DIR`. EGAD objects (`^[A-Z]\d+$`) load from
 `$EQUIDEXFLOW_EGAD_ROOT/{egad_eval_set,egad_train_set}/<name>.obj` scaled ×0.001.
 
-## Reference emitter
+## Emitting the schema
 
-The FRoGGeR adapter that produces these files from min-weight-metric grasp
-synthesis is the reference implementation:
-`frogger/frogger/equidex/dexgraspdb_adapter.py` (in the FRoGGeR repo). Mirror its
-field mapping to emit from any other backbone.
+Any backbone can produce these files: match the field table above. We generated
+the released data with FRoGGeR, but nothing here depends on it.

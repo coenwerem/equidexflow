@@ -230,10 +230,8 @@ The config's `data:` block sets `grasp_db_dir` (your `<hand>`), `mu`, object
 mass, point count, the split (`pre_split: true` for already-split data), and
 the object subset.
 
-We ship no format converter, so you emit the schema yourself. FRoGGeR's
-min-weight-metric adapter (`frogger/equidex/dexgraspdb_adapter.py`, in the
-FRoGGeR repo) is the reference: mirror its field mapping to export from another
-backbone.
+We ship no format converter, so you emit the schema yourself. Match the record
+shown above and the loader will train on data from any backbone.
 
 ## Repo Layout
 ```
