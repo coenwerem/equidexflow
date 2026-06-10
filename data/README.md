@@ -1,8 +1,8 @@
-# Data Format - the EquiDexFlow grasp schema
+# Data Format: the EquiDexFlow grasp schema
 
-EquiDexFlow does not depend on FRoGGeR. It consumes a documented JSON grasp
-schema; FRoGGeR is just the default generator. Any synthesis backbone (BODex,
-DexGraspNet, your own optimizer) can emit compatible files and train the model.
+We use FRoGGeR as the default generator, but EquiDexFlow does not depend on it.
+The loader reads the JSON grasp schema below, so any synthesis backbone, or your
+own optimizer, can emit compatible files and train the model.
 
 ## Layout
 
@@ -38,8 +38,8 @@ export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects      # defaults to $EQUIDEXFLOW_
 | `hand_dof_values`    | (16,) | radians | yes | `HAND_DOF=16` (Allegro/LEAP), Drake `GetPositionNames` order |
 | `epsilon_quality`    | scalar | none | yes | Ferrari-Canny L1 / min-weight metric (force-closure) |
 | `volume_quality`     | scalar | m^6 | yes | wrench-cone polytope volume |
-| `wrist_pose_object`  | (4,4) | `T_object_wrist`, m | rec | optional, identity fallback; needed for FK rendering |
-| `contact_finger_ids` | (4,)  | 0=thumb..3=ring | rec | optional, falls back to FPS+Lloyd clustering |
+| `wrist_pose_object`  | (4,4) | `T_object_wrist`, m | rec | identity fallback; needed for FK rendering |
+| `contact_finger_ids` | (4,)  | 0=thumb..3=ring | rec | falls back to FPS+Lloyd clustering |
 | `object_position_mm` | (3,)  | world frame | meta | emitter metadata; not consumed by the loader |
 | `object_orientation` | (4,)  | quat (w,x,y,z) | meta | emitter metadata; not consumed by the loader |
 | `metadata`           | dict  | none | meta | free-form (seed, solve time, mu, ...) |
@@ -56,17 +56,17 @@ field is needed. Defaults: `mu=0.5`, `object_mass=0.2` (override in the config).
 
 The loader centers each example at the **mean of the sampled object point
 cloud** and subtracts that mean from the object points, contacts, and wrist
-translation **together**; `model.sample()` re-adds it so outputs return in the
-input cloud's frame. You do **not** pre-center. You only need object points,
-contacts, and the wrist pose expressed in **one consistent frame** plus a
-discoverable mesh. Without a mesh the loader degrades to a noisy contact-point
-proxy with zero normals (usable, lower quality).
+translation **together**. `model.sample()` re-adds it, so outputs return in the
+input cloud's frame. You do **not** pre-center: you only need object points,
+contacts, and the wrist pose in **one consistent frame**, plus a discoverable
+mesh. Drop the mesh and the loader falls back to a noisy contact-point proxy
+with zero normals, which still trains but costs quality.
 
 ### Minimum viable record
 
 `contact_points_mm`, `contact_normals`, `hand_dof_values`, `epsilon_quality`,
-`volume_quality`. Strongly recommended: `wrist_pose_object`,
-`contact_finger_ids`, and a discoverable object mesh.
+`volume_quality`. Add `wrist_pose_object`, `contact_finger_ids`, and a
+discoverable object mesh for the best results.
 
 ## Object meshes
 
