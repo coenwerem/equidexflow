@@ -201,8 +201,8 @@ record:
 
 ```json
 {
-  "contact_points_mm": [[x, y, z], ...],     // (Nf, 3) mm, object frame
-  "contact_normals":   [[nx, ny, nz], ...],  // (Nf, 3) unit, inward
+  "contact_points_mm": [[x, y, z], ...],     // (M, 3) mm, object frame
+  "contact_normals":   [[nx, ny, nz], ...],  // (M, 3) unit, inward
   "hand_dof_values":   [q0, ..., q15],        // (D,) radians, Drake joint order
   "epsilon_quality":   0.012,                 // force-closure metric (scalar)
   "volume_quality":    1.5e-5                  // wrench-cone volume (scalar)
