@@ -150,7 +150,7 @@ co-rotates with the object by equivariance:
 More objects, a cube primitive plus two rotation-symmetric objects:
 
 <p align="center">
-  <video src="assets/teaser/hardware_more_3up.mp4" controls muted loop width="80%"></video>
+  <img src="assets/teaser/hardware_more_3up.gif" width="80%" alt="Hardware execution on a LEAP Hand: cube primitive, cylinder primitive, and tennis ball." />
   <br/>
   <sub>Left to right: cube primitive, cylinder primitive, tennis ball.</sub>
 </p>
@@ -163,7 +163,7 @@ if the object drifts under 2 cm in every direction. The held object stays
 nearly stationary throughout.
 
 <p align="center">
-  <video src="assets/teaser/sim_shake_3up.mp4" controls muted loop width="80%"></video>
+  <img src="assets/teaser/sim_shake_3up.gif" width="80%" alt="Drake shake-test: LEAP grasps holding the mustard bottle and potted-meat can under six-axis perturbation." />
   <br/>
   <sub>Left to right: mustard bottle (0°, 3.2&nbsp;mm max drift), potted-meat can (0°, 0.9&nbsp;mm), potted-meat can (120°, 9.2&nbsp;mm), all pass (&lt; 2&nbsp;cm).</sub>
 </p>
