@@ -144,6 +144,14 @@ same grasp executes at both 0° and 120°.
   <sub><b>Top row:</b> box primitive at 0° / 120°. &nbsp; <b>Bottom row:</b> potted-meat can at 0° / 120°.</sub>
 </p>
 
+The YCB mustard bottle, also under the 0° → 120° co-rotation:
+
+<p align="center">
+  <img src="assets/teaser/hardware_mustard_2up.gif" width="72%" alt="Hardware execution on a LEAP Hand: YCB mustard bottle at 0 and 120 deg." />
+  <br/>
+  <sub>Left: 0°. &nbsp; Right: 120°.</sub>
+</p>
+
 More objects, a cube primitive plus two rotation-symmetric objects:
 
 <p align="center">
