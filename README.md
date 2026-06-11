@@ -164,12 +164,13 @@ More objects, a cube primitive plus two rotation-symmetric objects:
 We also stress-test the decoded grasps in [Drake](https://drake.mit.edu/) with
 the GenDexGrasp/GAGrasp shake protocol: gravity off, a ±*xyz* inertial load on
 the object along all six axes. A grasp passes if the object drifts under 2 cm in
-every direction. Here it barely moves.
+every direction. Both objects pass at the canonical pose and its 120°
+co-rotation, and the held object barely moves.
 
 <p align="center">
-  <img src="assets/teaser/sim_shake_3up.gif" width="80%" alt="Drake shake-test: LEAP grasps holding the mustard bottle and potted-meat can under six-axis perturbation." />
+  <img src="assets/teaser/sim_shake_4up.gif" width="92%" alt="Drake shake-test: LEAP grasps holding the mustard bottle and potted-meat can, each at 0 and 120 deg, under six-axis perturbation." />
   <br/>
-  <sub>Left to right: mustard bottle (0°, 3.2&nbsp;mm max drift), potted-meat can (0°, 0.9&nbsp;mm), potted-meat can (120°, 9.2&nbsp;mm), all pass (&lt; 2&nbsp;cm).</sub>
+  <sub>Left to right: mustard bottle (0°, 3.2&nbsp;mm max drift), mustard bottle (120°, 3.4&nbsp;mm), potted-meat can (0°, 0.9&nbsp;mm), potted-meat can (120°, 9.2&nbsp;mm), all pass (&lt; 2&nbsp;cm).</sub>
 </p>
 
 The [project page](https://equidexflow.github.io) has higher-resolution clips
