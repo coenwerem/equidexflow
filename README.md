@@ -7,7 +7,7 @@
 **SE(3)-Equivariant 6-DoF Dexterous Grasp Generative Flows**
 
 [Project Page](https://equidexflow.github.io) &nbsp;·&nbsp;
-[Paper (arXiv)](#) &nbsp;·&nbsp;
+[Paper (arXiv)](http://arxiv.org/abs/2606.12728) &nbsp;·&nbsp;
 [Data](#pretrained-checkpoints--datasets) &nbsp;·&nbsp;
 License: MIT &nbsp;·&nbsp;
 Python ≥ 3.10 &nbsp;·&nbsp;
@@ -262,10 +262,17 @@ equidexflow/
 
 ```bibtex
 @article{enwerem2026equidexflow,
-  author  = {Enwerem, Clinton and Baras, John S. and Belta, Calin},
-  title   = {{EquiDexFlow}: Contact-Grounded {SE(3)}-Equivariant Dexterous Grasp Generative Flows},
-  journal = {arXiv},
-  year    = {2026},
+  author = {Enwerem, Clinton and Baras, John S. and Belta, Calin},
+  title  = {{EquiDexFlow}: Contact-Grounded {SE}(3)-Equivariant Dexterous Grasp Generative Flows},
+  year   = {2026},
+  doi = {10.48550/arXiv.2606.12728},
+  number = {{arXiv}:2606.12728},
+  publisher = {{arXiv}},
+  date = {2026-06-10},
+  eprinttype = {arxiv},
+  eprint = {2606.12728 [cs.RO]},
+  shorttitle = {{EquiDexFlow}},
+  url = {http://arxiv.org/abs/2606.12728}
 }
 ```
 
