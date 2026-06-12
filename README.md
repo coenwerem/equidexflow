@@ -151,7 +151,7 @@ More objects, a cube primitive plus two rotation-symmetric objects:
 
 ### Simulation: Shake-Test Robustness
 We also stress-test the decoded grasps in [Drake](https://drake.mit.edu/) with
-the GenDexGrasp/GAGrasp shake protocol: gravity off, a ±*xyz* inertial load on
+the [GenDexGrasp](https://github.com/tengyu-liu/GenDexGrasp)/[GAGrasp](https://arxiv.org/abs/2503.04123) force-perturbation-based shake protocol: gravity off, a ±*xyz* inertial load on
 the object along all six axes. A grasp passes if the object drifts under 2 cm in
 every direction. Both objects pass at the canonical pose and its 120&deg;
 co-rotation, and the held object barely moves.
