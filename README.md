@@ -237,7 +237,7 @@ equidexflow/
 ├── src/equidexflow/        # model + API (pure torch/numpy/scipy)
 │   ├── api.py              # load_checkpoint(...)
 │   ├── models/             # equi_dex_flow + VN-DGCNN + decoders
-│   ├── kinematics/         # Allegro / LEAP / RealHand-L6 FK (differentiable)
+│   ├── kinematics/         # Allegro / LEAP FK (differentiable)
 │   ├── losses/  trainers/  metrics/  loaders/  physics/
 │   └── cli/                # equidexflow-demo, equidexflow-info
 ├── scripts/                # train.py, run_full_eval.py, eval_*, plot/, reproduce.sh
