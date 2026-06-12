@@ -26,16 +26,15 @@ $D{=}16$ and $M{=}4$. Both are set per-hand in the model config.
 ---
 
 ## Quickstart
-A fresh checkout to a posed-hand preview in three lines:
-
+Getting from a fresh checkout to a posed-hand preview PNG is easy with the bundled code. You can do it in three lines:
 ```bash
 pip install -e ".[demo]"
 python checkpoints/download_checkpoints.py allegro_full
 equidexflow-demo --mesh assets/objects/graspit/sphere.stl --checkpoint allegro_full
-# -> out/demo/preview.png  +  out/demo/grasp_{00..07}.npz
+# -> out/demo/preview.png,  out/demo/grasp_{00..07}.npz
 ```
 
-Or call the model directly from Python (pure inference, no extras):
+Or call the model directly from Python (pure inference):
 
 ```python
 import torch, trimesh
@@ -58,31 +57,24 @@ g["contact_logits"]# (M,)    per-finger confidence
 
 ## Installation
 
-Tested on Linux, Python 3.10–3.12, PyTorch 2.0+, CUDA 11.8+ (CPU also
-works for inference).
+Tested on Linux, Python 3.10–3.12, PyTorch 2.0+, CUDA 11.8+ (CUDA is auto-detected, but CPU also
+works for inference, only that it runs slowly once the ODE solver hits full sample counts). There are three installation flavors: `default`, `demo` (recommended), and `all`. For the full set of
+extras (`data`, `train`, `viz`, `demo`), see the project's [`pyproject.toml`](pyproject.toml).
 
 ```bash
 pip install -e .              # pure inference (torch, numpy, scipy, omegaconf, roma)
-pip install -e ".[demo]"      # + trimesh / open3d / matplotlib / gdown
-pip install -e ".[all]"       # + training / dataset loaders / plotting
+pip install -e ".[demo]"      # above  + trimesh / open3d / matplotlib / gdown (recommended)
+pip install -e ".[all]"       # [demo] + training / dataset loaders / plotting
 
 equidexflow-info              # quick sanity test: print version, CUDA, present checkpoints
 ```
 
-Most people want the `demo` extra. CUDA is auto-detected; CPU runs inference
-too, just slowly once the ODE solver hits full sample counts. The full set of
-extras (`data`, `train`, `viz`, `demo`) lives in `pyproject.toml`.
-
 ## Pretrained Checkpoints & Datasets
 
 > [!NOTE]
-> The checkpoints we release are for the **Allegro Hand**. **LEAP Hand
-> checkpoints are coming soon.** We produced the hardware results below by
-> retargeting Allegro grasps to the LEAP Hand via inverse kinematics.
+> The checkpoints we release are for the **Allegro Hand**. **We already trained and evaluated EquiDexFlow on the LEAP Hand asuccessfully, but thumb abduction quality on the decoded LEAP Hand grasps isn't where we'd like it to be and not on par with the Allegro Hand, so we are currently investigating GT synthesis/TTO refinements to improve thumb abduction. As a result, the LEAP Hand checkpoints are not included in our v0.1.0 release, but we hope to release them soon once the above issue is solved.** We produced the hardware results below by retargeting Allegro grasps to the LEAP Hand via inverse kinematics.
 
-We release both on Google Drive, pinned by sha256 in
-[`checkpoints/MANIFEST.yaml`](checkpoints/MANIFEST.yaml). Re-downloading leaves
-any file already on disk with the right hash untouched.
+We release both Allegro checkpoints and test-split grasp dataset (811 grasps per hand) on Google Drive, pinned by sha256 in [`checkpoints/MANIFEST.yaml`](checkpoints/MANIFEST.yaml). Re-downloading leaves any file already on disk with the right hash untouched. Download them using the following commands:
 
 ```bash
 # 5 model variants (allegro_full + 3 ablations + 1 alt flow), ~5 .pt files
@@ -106,7 +98,7 @@ export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects
 
 ## Demo and Visualization
 
-`equidexflow-demo` is the demo entry point: mostly watertight mesh in, grasps and preview out.
+`equidexflow-demo` is the demo entry point: mostly-watertight mesh in, grasps and preview out.
 
 ```bash
 # Default: 8 grasps, headless 2-pane preview PNG
@@ -131,25 +123,22 @@ g.files  # ['wrist_pose', 'hand_q', 'contacts', 'forces', 'contact_logits',
 ## Hardware & Simulation Results
 
 ### Hardware Execution
-We retarget the Allegro grasps from this codebase to a physical
-[LEAP Hand](https://leaphand.com/) on a 6-DoF
-[FAIR Innovation FR3 cobot](https://www.frtech.fr/FR/5.html) via inverse
-kinematics, then run them across several objects. We never re-plan for the
-rotated case: by equivariance, each grasp co-rotates with its object, so the
-same grasp executes at both 0° and 120°.
+We retarget the Allegro grasps from this codebase to a physical [LEAP Hand](https://leaphand.com/) on a 6-DoF
+[FAIR Innovation FR3 cobot (ZArm 622)](https://www.frtech.fr/FR/5.html) via inverse kinematics, then run them across several objects. We do not perform re-planning for the rotated case. Under equivariance, each grasp rotates together with the object, and the same grasp was reachable and executable in both the 0&deg; and 120&deg; configurations. In practice, however, the wrist poses associated with some grasps in the 120&deg; configuration admitted inverse-kinematics solutions with higher Yoshikawa manipulability indices than the grasp selected from the 0&deg; seed configuration, leading those grasps to be chosen at execution time.
+
 
 <p align="center">
   <img src="assets/teaser/hardware_2x2.gif" width="72%" alt="2x2 hardware execution panel: box primitive and potted-meat can, each at 0 and 120 deg, on a LEAP Hand." />
   <br/>
-  <sub><b>Top row:</b> box primitive at 0° / 120°. &nbsp; <b>Bottom row:</b> potted-meat can at 0° / 120°.</sub>
+  <sub><b>Top row:</b> box primitive at 0&deg; / 120&deg;. &nbsp; <b>Bottom row:</b> potted-meat can at 0&deg; / 120&deg;.</sub>
 </p>
 
-The YCB mustard bottle, also under the 0° → 120° co-rotation:
+The YCB mustard bottle, also under the 0&deg; $\rightarrow$ 120&deg; co-rotation:
 
 <p align="center">
   <img src="assets/teaser/hardware_mustard_2up.gif" width="72%" alt="Hardware execution on a LEAP Hand: YCB mustard bottle at 0 and 120 deg." />
   <br/>
-  <sub>Left: 0°. &nbsp; Right: 120°.</sub>
+  <sub>Left: 0&deg;. &nbsp; Right: 120&deg;.</sub>
 </p>
 
 More objects, a cube primitive plus two rotation-symmetric objects:
@@ -164,13 +153,13 @@ More objects, a cube primitive plus two rotation-symmetric objects:
 We also stress-test the decoded grasps in [Drake](https://drake.mit.edu/) with
 the GenDexGrasp/GAGrasp shake protocol: gravity off, a ±*xyz* inertial load on
 the object along all six axes. A grasp passes if the object drifts under 2 cm in
-every direction. Both objects pass at the canonical pose and its 120°
+every direction. Both objects pass at the canonical pose and its 120&deg;
 co-rotation, and the held object barely moves.
 
 <p align="center">
   <img src="assets/teaser/sim_shake_4up.gif" width="92%" alt="Drake shake-test: LEAP grasps holding the mustard bottle and potted-meat can, each at 0 and 120 deg, under six-axis perturbation." />
   <br/>
-  <sub>Left to right: mustard bottle (0°, 3.2&nbsp;mm max drift), mustard bottle (120°, 3.4&nbsp;mm), potted-meat can (0°, 0.9&nbsp;mm), potted-meat can (120°, 9.2&nbsp;mm), all pass (&lt; 2&nbsp;cm).</sub>
+  <sub>Left to right: mustard bottle (0&deg;, 3.2&nbsp;mm max drift), mustard bottle (120&deg;, 3.4&nbsp;mm), potted-meat can (0&deg;, 0.9&nbsp;mm), potted-meat can (120&deg;, 9.2&nbsp;mm), all pass (&lt; 2&nbsp;cm).</sub>
 </p>
 
 The [project page](https://equidexflow.github.io) has higher-resolution clips
@@ -212,9 +201,9 @@ record:
 {
   "contact_points_mm": [[x, y, z], ...],     // (M, 3) mm, object frame
   "contact_normals":   [[nx, ny, nz], ...],  // (M, 3) unit, inward
-  "hand_dof_values":   [q0, ..., q15],        // (D,) radians, Drake joint order
-  "epsilon_quality":   0.012,                 // force-closure metric (scalar)
-  "volume_quality":    1.5e-5                  // wrench-cone volume (scalar)
+  "hand_dof_values":   [q0, ..., q15],       // (D,) radians, Drake joint order
+  "epsilon_quality":   0.012,                // force-closure metric (scalar)
+  "volume_quality":    1.5e-5                // wrench-cone volume (scalar)
 }
 ```
 
