@@ -248,9 +248,10 @@ equidexflow/
 ```
 
 ## Citation
+If you find EquiDexFlow (either the code, dataset, or the paper) useful in your work, please cite us using the following BiBTeX entry:
 
 ```bibtex
-@article{enwerem2026equidexflow,
+@article{enwerem_equidexflow_2026,
   author = {Enwerem, Clinton and Baras, John S. and Belta, Calin},
   title  = {{EquiDexFlow}: Contact-Grounded {SE}(3)-Equivariant Dexterous Grasp Generative Flows},
   year   = {2026},
@@ -275,9 +276,8 @@ VN-DGCNN encoder, Lie-group utilities, ODE solvers, and SE(3) base
 distributions originate upstream. See [`NOTICE`](NOTICE) for a per-file
 breakdown. The encoders build on
 [Vector Neurons (Deng et al., 2021)](https://arxiv.org/abs/2104.12229)
-and [DGCNN (Wang et al., 2019)](https://arxiv.org/abs/1801.07829).
-We synthesized training grasps with
-[FRoGGeR](https://github.com/alberthli/frogger) ([Li et al., IROS 2023](https://arxiv.org/abs/2302.13687))
+and [DGCNN (Wang et al., 2019)](https://arxiv.org/abs/1801.07829). The simulation shake test was adapted to Drake from the works of the GenDexGrasp ([paper](https://arxiv.org/abs/2210.00722), [code](https://github.com/tengyu-liu/GenDexGrasp)) and GAGrasp ([paper](https://arxiv.org/abs/2503.04123)) authors. We synthesized training grasps with
+[FRoGGeR](https://github.com/alberthli/frogger) introduced in [Li et al., IROS 2023](https://arxiv.org/abs/2302.13687)
 and ran the hardware results on the
 [LEAP Hand (Shaw et al., RSS 2023)](https://leaphand.com).
-We thank the maintainers of PyTorch, Open3D, trimesh, and Drake.
+We gratefully acknowledge the authors of the aforementioned papers and their associated repositories. We also thank the maintainers of PyTorch, Open3D, trimesh, and Drake.
