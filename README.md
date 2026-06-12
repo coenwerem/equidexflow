@@ -26,7 +26,7 @@ $D{=}16$ and $M{=}4$. Both are set per-hand in the model config.
 ---
 
 ## Quickstart
-Getting from a fresh checkout to a posed-hand preview PNG is easy with the bundled code. You can do it in three lines:
+Getting from a fresh checkout to a posed-hand grasp preview PNG is easy with the bundled code. You can do it in three lines:
 ```bash
 pip install -e ".[demo]"
 python checkpoints/download_checkpoints.py allegro_full
