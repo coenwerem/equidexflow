@@ -27,10 +27,10 @@ $D{=}16$ and $M{=}4$. Both are set per-hand in the model config.
 
 ## Quickstart
 
-Drop the repo into an isolated Python environment first (venv or conda — pick one):
+Clone the repo into any directory of your choosing. Then create an isolated Python environment (venv or conda):
 
 ```bash
-# Option A: venv (stdlib)
+# Option A: venv
 python3.10 -m venv .venv && source .venv/bin/activate
 pip install --upgrade pip
 
@@ -38,7 +38,7 @@ pip install --upgrade pip
 conda create -n equidexflow python=3.10 -y && conda activate equidexflow
 ```
 
-Getting from a fresh checkout to a posed-hand grasp preview PNG is easy with the bundled code. You can do it in three lines:
+From the activated environment, install the bundled code and try a quick demo:
 ```bash
 pip install -e ".[demo]"
 python checkpoints/download_checkpoints.py allegro_full
