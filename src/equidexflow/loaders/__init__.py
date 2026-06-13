@@ -1,7 +1,10 @@
 import torch
 
-from equidexflow.loaders.acronym import AcronymFullPointCloud, AcronymPartialPointCloud
 from equidexflow.loaders.dexgrasp_db import DexGraspDBDataset, collate_fn_dexgrasp
+
+# `acronym` pulls in h5py, which only ships with the [data]/[train] extras.
+# The reproduce path (.[demo]) and pure inference don't need it, so load
+# lazily and only raise if someone actually selects an ACRONYM dataset.
 
 
 def get_dataloader(split, cfg_dataloader):
@@ -27,14 +30,16 @@ def get_dataset(cfg_dataset):
     name = cfg_dataset.pop('name')
 
     if name == 'full':
+        from equidexflow.loaders.acronym import AcronymFullPointCloud
         dataset = AcronymFullPointCloud(**cfg_dataset)
     elif name == 'partial':
+        from equidexflow.loaders.acronym import AcronymPartialPointCloud
         dataset = AcronymPartialPointCloud(**cfg_dataset)
     elif name == 'dexgrasp':
         dataset = DexGraspDBDataset(**cfg_dataset)
     else:
         raise NotImplementedError(f"Dataset {name} not implemented.")
-    
+
     return dataset
 
 

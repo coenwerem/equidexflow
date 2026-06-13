@@ -102,3 +102,24 @@ datasets:
     size_mb: 3
     n_objects: 82
     note: test split only (811 grasps); set DexGraspDBDataset(pre_split=True). Full data regenerable via FRoGGeR.
+objects:
+  objects_ycb:
+    kind: ycb
+    drive_id: 1PGABZoRqGdtN1WpVYzT99RmgMOLqDdo2
+    sha256: ae7c823eec7791cbd6d9877db444ab91b3b21518a44ac5b955522e835c2bc398
+    size_mb: 32
+    n_objects: 28
+    extract_to: assets/objects
+    license: CC BY 4.0 (YCB; https://www.ycbbenchmarks.com/)
+    note: 28 YCB clean meshes referenced by the 81-object test split (frogger_ycb/<id>.obj).
+      Watertight cleans were produced by FRoGGeR (https://github.com/alberthli/frogger);
+      see NOTICE for attribution.
+  objects_egad:
+    kind: egad
+    drive_id: 1-FN0u5IF6PmB31MSWHPG1Gb7KaWq-2nK
+    sha256: 82e3c26ae5f1472d7250c34bb0db6a16d5bd1fd88db8b502873e11c47b32952e
+    size_mb: 6
+    n_objects: 49
+    extract_to: ~/.cache/equidexflow/egad
+    license: CC BY-NC 4.0 (EGAD; https://dougsm.github.io/egad/)
+    note: EGAD eval set (49 objects, A0..G6) — loaded via EQUIDEXFLOW_EGAD_ROOT.

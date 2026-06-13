@@ -4,10 +4,26 @@ Model-side (no-Drake) reproduction. One environment:
 
 ```bash
 pip install -e .[train,viz]
-python checkpoints/download_checkpoints.py --all     # 5 .pt files into checkpoints/<key>/
-python scripts/download_assets.py --all              # 2 test-split tarballs into data/dexgraspdb/v3/<hand>/
-export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects      # object meshes (YCB + EGAD + GraspIt primitives)
+python checkpoints/download_checkpoints.py --all     # 4 .pt files into checkpoints/<key>/
+python scripts/download_assets.py --all              # 2 grasp tarballs + YCB + EGAD meshes
 ```
+
+The `[train,viz]` extras are required on this path (eval imports `h5py`
+transitively); `.[demo]` alone is not enough.
+
+`download_assets.py --all` fetches everything the 81-object test split
+needs: the two test-split grasp tarballs into `data/dexgraspdb/v3/<hand>/`,
+the 28 YCB clean meshes referenced by the test split into
+`assets/objects/frogger_ycb/`, and the 49-mesh EGAD eval set into
+`~/.cache/equidexflow/egad/egad_eval_set/`. The four GraspIt primitives
+ship in-tree under `assets/objects/graspit/`. No environment variables
+are required for a stock reproduction. Set `EQUIDEXFLOW_STRICT_MESH=1`
+if you want the loader to raise on a missing mesh instead of warning.
+
+Mesh sources, redistributed under their upstream licenses:
+[YCB](https://www.ycbbenchmarks.com/object-models/) (CC BY 4.0; watertight
+"clean" variants produced by [FRoGGeR](https://github.com/alberthli/frogger),
+MIT) · [EGAD](https://dougsm.github.io/egad/) (CC BY-NC 4.0).
 
 The released dataset contains **only the 10% test split** (811 grasps per
 hand) used to produce the paper's results table. Pass `--pre-split` to the

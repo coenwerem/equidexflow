@@ -29,3 +29,15 @@ New in EquiDexFlow:
 
 The default training data is produced using a modified local fork of FRoGGeR (Li et al.), but EquiDexFlow does not depend on FRoGGeR at runtime: it consumes a documented JSON grasp
 schema (see data/README.md) that any synthesis backbone can emit.
+
+Object meshes redistributed via scripts/download_assets.py:
+  - YCB object set (Calli et al., 2015) — https://www.ycbbenchmarks.com/
+    Redistributed under CC BY 4.0. The specific .obj files we ship are the
+    watertight "clean" variants produced by the FRoGGeR preprocessing
+    pipeline (Li et al., IROS 2023; https://github.com/alberthli/frogger),
+    used here under the FRoGGeR repository's MIT License. The underlying
+    geometry is the YCB benchmark set; FRoGGeR's contribution is the
+    cleaning/watertight remeshing step. Both upstreams must be credited
+    when redistributing or building on this asset tarball.
+  - EGAD! eval set (Morrison, Corke, Leitner, 2020) — https://dougsm.github.io/egad/
+    Redistributed under CC BY-NC 4.0. Non-commercial use only.

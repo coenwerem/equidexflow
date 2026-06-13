@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Dict, List, Optional, Sequence
+import warnings
+from typing import Dict, List, Optional, Sequence, Set
 
 import numpy as np
 import torch
@@ -246,6 +247,14 @@ class DexGraspDBDataset(Dataset):
         # Pre-load and cache trimesh meshes keyed by object name
         self._mesh_cache: Dict[str, object] = {}
 
+        # Track per-object proxy-fallback events so we can warn loudly when
+        # a mesh is missing instead of silently substituting a degenerate
+        # tiled-contact point cloud. Strict mode (env flag) raises instead.
+        self._proxy_fallback_seen: Set[str] = set()
+        self._strict_mesh: bool = os.environ.get(
+            "EQUIDEXFLOW_STRICT_MESH", "0"
+        ).lower() in ("1", "true", "yes")
+
         # ------------------------------------------------------------------
         # Load all grasps from every *.json file in grasp_db_dir
         # ------------------------------------------------------------------
@@ -407,6 +416,27 @@ class DexGraspDBDataset(Dataset):
                 pass
 
         # Proxy fallback: tile contact points + Gaussian noise; zero normals.
+        # Loudly surface this — silent substitution made eval runs look valid
+        # while producing meaningless point clouds. Strict mode raises so the
+        # reproduce path fails fast when meshes are unset.
+        if self._strict_mesh:
+            raise FileNotFoundError(
+                f"No mesh available for object '{object_name}' in "
+                f"'{self.object_mesh_dir}' (EQUIDEXFLOW_STRICT_MESH=1). "
+                f"Point EQUIDEXFLOW_OBJECTS_DIR at the YCB/EGAD/GraspIt "
+                f"meshes; see REPRODUCE.md."
+            )
+        if object_name not in self._proxy_fallback_seen:
+            self._proxy_fallback_seen.add(object_name)
+            warnings.warn(
+                f"[dexgrasp_db] mesh missing for '{object_name}'; falling back "
+                f"to a degenerate contact-proxy point cloud (zero normals). "
+                f"Numbers from this object are NOT meaningful. "
+                f"({len(self._proxy_fallback_seen)} object(s) on proxy so far.) "
+                f"Set EQUIDEXFLOW_STRICT_MESH=1 to make this an error.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         N = len(contacts_m)
         if N >= 1:
             rng = np.random.default_rng()

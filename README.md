@@ -55,11 +55,13 @@ Or call the model directly from Python (pure inference):
 import torch, trimesh
 from equidexflow import load_checkpoint
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 mesh = trimesh.load("assets/objects/graspit/sphere.stl", force="mesh")
 pts, _ = trimesh.sample.sample_surface(mesh, 512)
-pc    = torch.from_numpy(pts.T).float().cuda()           # (3, N)
+pc    = torch.from_numpy(pts.T).float().to(device)       # (3, N)
 
-model  = load_checkpoint("allegro_full", device="cuda")
+model  = load_checkpoint("allegro_full", device=device)
 grasps = model.sample(pc, num_samples=10)                # list[dict] of length 10
 
 g = grasps[0]
@@ -102,7 +104,7 @@ equidexflow-info              # quick sanity test: print version, CUDA, present 
 We release both Allegro checkpoints and test-split grasp dataset (811 grasps per hand) on Google Drive, pinned by sha256 in [`checkpoints/MANIFEST.yaml`](checkpoints/MANIFEST.yaml). Re-downloading leaves any file already on disk with the right hash untouched. Download them using the following commands:
 
 ```bash
-# 5 model variants (allegro_full + 3 ablations + 1 alt flow), ~5 .pt files
+# 4 model variants (allegro_full + 3 ablations), 4 .pt files
 python checkpoints/download_checkpoints.py --all
 
 # 2 test-split tarballs (811 grasps per hand) -> data/dexgraspdb/v3/<hand>/
@@ -112,10 +114,19 @@ python scripts/download_assets.py --all
 The dataset we release is the **10% test split** (811 grasps per hand) behind
 the paper's results table. We generated the other 90% (train and validation)
 with an internal synthesis pipeline that we do not release. The published
-checkpoints are what that run produced. We bundle a few object meshes under
-`assets/objects/`, enough for the demo CLI and the quickstart. Evaluating
-against the full test split also needs the original YCB, EGAD, and GraspIt
-meshes on disk, so point `EQUIDEXFLOW_OBJECTS_DIR` at them:
+checkpoints are what that run produced. `scripts/download_assets.py --all`
+pulls in everything the full 81-object test eval needs: the two test-split
+grasp tarballs, the 28 YCB clean meshes referenced by the split (into
+`assets/objects/frogger_ycb/`), and the 49-mesh EGAD eval set (into
+`~/.cache/equidexflow/egad/`). The four GraspIt primitives are checked in
+under `assets/objects/graspit/`. The YCB clean meshes are the watertight
+variants produced by [FRoGGeR](https://github.com/alberthli/frogger)'s
+preprocessing pipeline (used under MIT); the underlying YCB geometry is
+CC BY 4.0; EGAD is CC BY-NC 4.0. See [`NOTICE`](NOTICE) for the full
+attribution.
+
+For training on your own grasp data, set `EQUIDEXFLOW_OBJECTS_DIR` to a
+directory containing your meshes:
 
 ```bash
 export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects
