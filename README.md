@@ -27,24 +27,27 @@ $D{=}16$ and $M{=}4$. Both are set per-hand in the model config.
 
 ## Quickstart
 
-Clone the repo into any directory of your choosing. Then create an isolated Python environment (venv or conda):
+Clone the repo into any directory of your choosing. We use [`uv`](https://docs.astral.sh/uv/) to manage the environment; install it once with `curl -LsSf https://astral.sh/uv/install.sh | sh` (or see the uv docs for other installers). Then create an isolated Python environment:
 
 ```bash
-# Option A: venv
-python3.10 -m venv .venv && source .venv/bin/activate
-pip install --upgrade pip
-
-# Option B: conda / mamba
-conda create -n equidexflow python=3.10 -y && conda activate equidexflow
+uv venv --python 3.10 && source .venv/bin/activate
 ```
 
 From the activated environment, install the bundled code and try a quick demo:
 ```bash
-pip install -e ".[demo]"
+# GPU machine: auto-detect the right CUDA wheel for the installed driver
+uv pip install --torch-backend=auto -e ".[demo]"
+
+# CPU-only machine (no NVIDIA GPU): pull the CPU torch wheel and skip all nvidia-* packages
+uv pip install --torch-backend=cpu -e ".[demo]"
+
 python checkpoints/download_checkpoints.py allegro_full
 equidexflow-demo --mesh assets/objects/graspit/sphere.stl --checkpoint allegro_full
 # -> out/demo/preview.png,  out/demo/grasp_{00..07}.npz
 ```
+
+> [!TIP]
+> `--torch-backend=auto` inspects the host for an NVIDIA driver and picks the matching CUDA wheel; on a machine with no NVIDIA GPU it falls back to the CPU wheel automatically. Pass `--torch-backend=cpu` explicitly to force the CPU build (smaller download, no `nvidia-cublas-cu12` / `nvidia-cudnn-cu12` / etc. pulled in as transitive deps). On older `uv` versions without `--torch-backend`, the equivalent is `uv pip install --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cpu -e ".[demo]"`.
 
 Or call the model directly from Python (pure inference):
 
@@ -73,10 +76,20 @@ Tested on Linux, Python 3.10–3.12, PyTorch 2.0+, CUDA 11.8+ (CUDA is auto-dete
 works for inference, only that it runs slowly once the ODE solver hits full sample counts). There are three installation flavors: `default`, `demo` (recommended), and `all`. For the full set of
 extras (`data`, `train`, `viz`, `demo`), see the project's [`pyproject.toml`](pyproject.toml).
 
+All install commands below assume an activated `uv` venv (see [Quickstart](#quickstart)). Pick the backend that matches your hardware — `--torch-backend=auto` picks a CUDA wheel on NVIDIA machines and the CPU wheel everywhere else; `--torch-backend=cpu` forces CPU-only and prevents the `nvidia-*` runtime packages (`nvidia-cublas-cu12`, `nvidia-cudnn-cu12`, `nvidia-nccl-cu12`, ...) from being pulled in as transitive torch dependencies.
+
 ```bash
-pip install -e .              # pure inference (torch, numpy, scipy, omegaconf, roma)
-pip install -e ".[demo]"      # above  + trimesh / open3d / matplotlib / gdown (recommended)
-pip install -e ".[all]"       # [demo] + training / dataset loaders / plotting
+# Pure inference (torch, numpy, scipy, omegaconf, roma)
+uv pip install --torch-backend=auto -e .
+# + trimesh / open3d / matplotlib / gdown (recommended)
+uv pip install --torch-backend=auto -e ".[demo]"
+# [demo] + training / dataset loaders / plotting
+uv pip install --torch-backend=auto -e ".[all]"
+
+# Same three flavors, CPU-only (no nvidia-* packages installed):
+uv pip install --torch-backend=cpu -e .
+uv pip install --torch-backend=cpu -e ".[demo]"
+uv pip install --torch-backend=cpu -e ".[all]"
 
 equidexflow-info              # quick sanity test: print version, CUDA, present checkpoints
 ```
