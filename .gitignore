@@ -31,3 +31,4 @@ checkpoints/allegro_full_flow_alt/
 # target private dataset/paper trees and are not part of the public release; kept
 # here for local use only.
 dev_scripts/
+src/equidexflow/kinematics/seating_leap.py

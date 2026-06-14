@@ -136,9 +136,10 @@ export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects
 
 The demo **seats** each grasp before visualizing it: the raw decoder output
 places the contacts on the object surface but leaves the hand floating off it, so
-the demo runs a short task-space optimization (wrist + joint angles, under the
-decoder's joint limits) that pulls the fingertips onto the predicted contacts.
-The saved pose is the seated, executable one.
+the demo runs a short **penetration-aware** task-space optimization (wrist + joint
+angles, under the decoder's joint limits, with a signed-distance term against the
+object surface) that pulls the fingertips onto the predicted contacts without
+pushing the links through the object. The saved pose is the seated, executable one.
 
 ```bash
 # Default: 8 grasps, headless 2-pane preview PNG (no GL needed)

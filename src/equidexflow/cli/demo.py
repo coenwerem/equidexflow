@@ -41,6 +41,15 @@ def _load_mesh_points(mesh_path: Path, n_points: int, rng: np.random.Generator):
     return mesh, np.asarray(pts, dtype=np.float32)
 
 
+def _sample_surface_with_normals(mesh, n_points: int, rng: np.random.Generator):
+    """Surface points + outward unit normals (object frame), for the seating
+    penetration term. Denser than the model point cloud for better coverage."""
+    import trimesh
+    pts, fid = trimesh.sample.sample_surface(mesh, n_points, seed=int(rng.integers(2**31)))
+    nrm = mesh.face_normals[fid]
+    return np.asarray(pts, dtype=np.float32), np.asarray(nrm, dtype=np.float32)
+
+
 def _rank_grasps(grasps: list[dict]) -> list[int]:
     """Rank by mean contact-logit (higher is better)."""
     scores = [float(g["contact_logits"].mean().item()) for g in grasps]
@@ -134,11 +143,18 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
 
     pc = torch.from_numpy(pts.T).to(args.device)  # (3, N)
-    # Seat the hand onto the object (refine_wrist) so the fingertips reach the
-    # predicted contacts; the raw decoder output floats off the surface.
-    print(f"[demo] seating  : task-space optimization, {args.seat_steps} steps")
+    # Penetration-aware surface for the seating SDF term (denser than the model
+    # point cloud, with outward normals), in the object frame.
+    seat_pts_np, seat_nrm_np = _sample_surface_with_normals(mesh, max(args.num_points * 4, 2048), rng)
+    mesh_pts = torch.from_numpy(seat_pts_np).to(args.device)
+    mesh_nrm = torch.from_numpy(seat_nrm_np).to(args.device)
+    # Seat the hand onto the object so the fingertips reach the predicted
+    # contacts WITHOUT pushing links through the surface; the raw decoder output
+    # floats off the object and is penetration-blind.
+    print(f"[demo] seating  : penetration-aware task-space optimization, {args.seat_steps} steps")
     grasps = model.sample_seated(
         pc, num_samples=args.num_samples, n_steps=args.seat_steps,
+        mesh_pts=mesh_pts, mesh_nrm=mesh_nrm,
     )
 
     fk = AllegroRightHandFK().to(args.device).eval()

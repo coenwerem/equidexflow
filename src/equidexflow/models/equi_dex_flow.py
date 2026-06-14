@@ -493,6 +493,10 @@ class EquiDexFlow(nn.Module):
         lr: float = 0.02,
         trust_w: float = 0.05,
         selfcoll_w: float = 0.0,
+        mesh_pts: torch.Tensor | None = None,   # (M, 3) object surface pts (object frame)
+        mesh_nrm: torch.Tensor | None = None,   # (M, 3) outward unit normals
+        pen_w: float = 50.0,
+        tip_margin: float = 0.002,
         return_raw: bool = False,
     ) -> list[dict]:
         """Sample grasps and *seat* the hand onto the object.
@@ -506,10 +510,16 @@ class EquiDexFlow(nn.Module):
         single rigid move. ``contacts`` / ``forces`` / ``contact_logits`` are the
         same surface-projected predictions as :meth:`sample`.
 
-        ``n_steps`` / ``lr`` / ``trust_w`` / ``selfcoll_w`` are forwarded to
-        :func:`seat_grasp`. With ``return_raw=True`` each dict additionally
-        carries ``'wrist_pose_raw'`` / ``'hand_q_raw'`` (the unseated decoder
-        output) for before/after comparison.
+        **Penetration awareness:** pass ``mesh_pts`` (and ``mesh_nrm``) -- object
+        surface points and outward normals in the SAME (object) frame as the
+        returned contacts -- to enable the signed-distance penetration term.
+        Without them, seating is penetration-unaware and the reach objective can
+        drag proximal links through a thin object. The demo always passes them.
+
+        ``n_steps`` / ``lr`` / ``trust_w`` / ``selfcoll_w`` / ``pen_w`` /
+        ``tip_margin`` are forwarded to :func:`seat_grasp`. With
+        ``return_raw=True`` each dict additionally carries
+        ``'wrist_pose_raw'`` / ``'hand_q_raw'`` (the unseated decoder output).
         """
         from equidexflow.kinematics.seating import seat_grasp
 
@@ -524,9 +534,16 @@ class EquiDexFlow(nn.Module):
             lo = torch.full((self.hand_dof,), -3.14159, device=dec['hand_q'].device)
             hi = torch.full((self.hand_dof,),  3.14159, device=dec['hand_q'].device)
 
+        if mesh_pts is not None:
+            mesh_pts = mesh_pts.to(dec['hand_q'].device, dec['hand_q'].dtype)
+        if mesh_nrm is not None:
+            mesh_nrm = mesh_nrm.to(dec['hand_q'].device, dec['hand_q'].dtype)
+
         wrist_seat, hand_q_seat = seat_grasp(
             self.fk, dec['hand_q'], dec['wrist_base'], dec['contacts'],
-            lo, hi, n_steps=n_steps, lr=lr, trust_w=trust_w, selfcoll_w=selfcoll_w,
+            lo, hi, mesh_pts=mesh_pts, mesh_nrm=mesh_nrm,
+            n_steps=n_steps, lr=lr, trust_w=trust_w, selfcoll_w=selfcoll_w,
+            pen_w=pen_w, tip_margin=tip_margin,
         )
 
         total = hand_q_seat.shape[0]
