@@ -286,17 +286,17 @@ shown above and the loader will train on data from any backbone.
 ## Repo Layout
 ```
 equidexflow/
-├── src/equidexflow/        # model + API (pure torch/numpy/scipy)
-│   ├── api.py              # load_checkpoint(...)
-│   ├── models/             # equi_dex_flow + VN-DGCNN + decoders
-│   ├── kinematics/         # Allegro / LEAP FK (differentiable)
-│   ├── losses/  trainers/  metrics/  loaders/  physics/
-│   └── cli/                # equidexflow-demo, equidexflow-info
-├── scripts/                # train.py, run_full_eval.py, eval_*, plot/, reproduce.sh
-├── checkpoints/            # MANIFEST.yaml and downloader. <variant>/{best.pt, config.yml}
-├── data/dexgraspdb/v3/     # downloaded test-split tarballs (see data/README.md for the schema)
-├── assets/                 # hand URDFs + mesh primitives + logo + teaser media
-└── tests/                  # pytest
+├-- src/equidexflow/        # model + API (pure torch/numpy/scipy)
+│   ├-- api.py              # load_checkpoint(...)
+│   ├-- models/             # equi_dex_flow + VN-DGCNN + decoders
+│   ├-- kinematics/         # Allegro / LEAP FK (differentiable)
+│   ├-- losses/  trainers/  metrics/  loaders/  physics/
+│   └-- cli/                # equidexflow-demo, equidexflow-info
+├-- scripts/                # train.py, run_full_eval.py, eval_*, plot/, reproduce.sh
+├-- checkpoints/            # MANIFEST.yaml and downloader. <variant>/{best.pt, config.yml}
+├-- data/dexgraspdb/v3/     # downloaded test-split tarballs (see data/README.md for the schema)
+├-- assets/                 # hand URDFs + mesh primitives + logo + teaser media
+└-- tests/                  # pytest
 ```
 
 ## Citation

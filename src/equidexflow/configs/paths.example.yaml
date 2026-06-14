@@ -11,9 +11,9 @@
 # Expected on-disk layout:
 #
 #   $EQUIDEXFLOW_DATA_DIR/
-#   └── dexgraspdb/v3/<hand>/<object_name>.json        # one grasp file per object
+#   └-- dexgraspdb/v3/<hand>/<object_name>.json        # one grasp file per object
 #   $EQUIDEXFLOW_OBJECTS_DIR/
-#   └── <stem>.obj | <stem>.stl                        # meshes, sampled to point clouds at load
+#   └-- <stem>.obj | <stem>.stl                        # meshes, sampled to point clouds at load
 #
 # EQUIDEXFLOW_OBJECTS_DIR defaults to $EQUIDEXFLOW_DATA_DIR/objects when unset.
 # The per-object JSON grasp schema is documented in ../../data/README.md
