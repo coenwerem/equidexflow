@@ -8,10 +8,11 @@ For each variant, generates K=20 grasp candidates per test object and computes:
   - Contact spread: mean pairwise distance between contact sets (mm)
   - Coverage@k: fraction of objects where at least one grasp exceeds threshold
 
-Usage:
-    ~/ResearchProjects/MuJoCoDex/.venv/bin/python \
-        ~/ResearchProjects/frogger/scripts/equidex/compute_diversity.py \
-        --device 0 --num-samples 20
+Usage (from the repo root, in the project venv):
+    python scripts/compute_diversity.py --device 0 --num-samples 20
+
+Dataset/mesh locations default to the repo-local data/dexgraspdb/v3/<hand> and
+assets/objects; override with EQUIDEXFLOW_DATA_DIR / EQUIDEXFLOW_OBJECTS_DIR.
 """
 from __future__ import annotations
 
@@ -39,10 +40,21 @@ from equidexflow.physics.scorer import GraspScorer
 # Config
 # ---------------------------------------------------------------------------
 
-FROGGER_ROOT = Path(__file__).resolve().parents[2]
-OUT_DIR = FROGGER_ROOT / "outputs" / "paper_results" / "equidex" / "diversity_metrics"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OUT_DIR = REPO_ROOT / "outputs" / "paper_results" / "equidex" / "diversity_metrics"
 
 EQUIDEXFLOW_DIR = Path(_EDF_DIR)
+
+
+def _data_dir(sub: str) -> str:
+    env = os.environ.get("EQUIDEXFLOW_DATA_DIR")
+    if env:
+        return str(Path(env) / "dexgraspdb" / "v3" / sub)
+    return str(REPO_ROOT / "data" / "dexgraspdb" / "v3" / sub)
+
+
+def _objects_dir() -> str:
+    return os.environ.get("EQUIDEXFLOW_OBJECTS_DIR") or str(REPO_ROOT / "assets" / "objects")
 
 VARIANTS = {
     "Full": "equidexflow_leap_full_fc_reach_flow",
@@ -54,8 +66,8 @@ VARIANTS = {
 TEST_CONFIG = {
     "dataset": {
         "name": "dexgrasp",
-        "grasp_db_dir": str(Path.home() / "ResearchProjects/frogger/outputs/datasets/dexgraspdb/v3/leap"),
-        "object_mesh_dir": str(Path.home() / "ResearchProjects/MuJoCoDex/assets/misc/objects"),
+        "grasp_db_dir": _data_dir("leap"),
+        "object_mesh_dir": _objects_dir(),
         "n_object_points": 512,
         "max_contacts": 64,
         "mu": 0.5,

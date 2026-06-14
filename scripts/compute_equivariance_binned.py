@@ -17,10 +17,11 @@ Metrics per rotation:
   - Max joint deviation: max |hand_q_R - hand_q_0|  (degrees, converted)
   - Contact position residual: mean ||c_pred - R @ c_0||  (mm)
 
-Usage:
-    ~/ResearchProjects/MuJoCoDex/.venv/bin/python \
-        ~/ResearchProjects/frogger/scripts/equidex/compute_equivariance_binned.py \
-        --device 0 --n-rotations 200 --n-objects 10
+Usage (from the repo root, in the project venv):
+    python scripts/compute_equivariance_binned.py --device 0 --n-rotations 200 --n-objects 10
+
+Dataset/mesh locations default to the repo-local data/dexgraspdb/v3/<hand> and
+assets/objects; override with EQUIDEXFLOW_DATA_DIR / EQUIDEXFLOW_OBJECTS_DIR.
 """
 from __future__ import annotations
 
@@ -47,19 +48,30 @@ from equidexflow.loaders import get_dataloader
 # Config
 # ---------------------------------------------------------------------------
 
-FROGGER_ROOT = Path(__file__).resolve().parents[2]
-OUT_DIR = FROGGER_ROOT / "outputs" / "paper_results" / "equidex" / "equivariance_binned"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OUT_DIR = REPO_ROOT / "outputs" / "paper_results" / "equidex" / "equivariance_binned"
 
 EQUIDEXFLOW_DIR = Path(_EDF_DIR)
 FULL_VARIANT = "equidexflow_leap_full_fc_reach_flow"
+
+
+def _data_dir(sub: str) -> str:
+    env = os.environ.get("EQUIDEXFLOW_DATA_DIR")
+    if env:
+        return str(Path(env) / "dexgraspdb" / "v3" / sub)
+    return str(REPO_ROOT / "data" / "dexgraspdb" / "v3" / sub)
+
+
+def _objects_dir() -> str:
+    return os.environ.get("EQUIDEXFLOW_OBJECTS_DIR") or str(REPO_ROOT / "assets" / "objects")
 
 ANGLE_BINS = [(0, 30), (30, 60), (60, 90), (90, 120), (120, 150), (150, 180)]
 
 TEST_CONFIG = {
     "dataset": {
         "name": "dexgrasp",
-        "grasp_db_dir": str(Path.home() / "ResearchProjects/frogger/outputs/datasets/dexgraspdb/v3/leap"),
-        "object_mesh_dir": str(Path.home() / "ResearchProjects/MuJoCoDex/assets/misc/objects"),
+        "grasp_db_dir": _data_dir("leap"),
+        "object_mesh_dir": _objects_dir(),
         "n_object_points": 512,
         "max_contacts": 64,
         "mu": 0.5,

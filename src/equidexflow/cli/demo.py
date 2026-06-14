@@ -98,41 +98,6 @@ def _render_png(
     plt.close(fig)
 
 
-def _open3d_viewer(
-    mesh,
-    contacts: np.ndarray,
-    forces: np.ndarray,
-    spheres_xyz: np.ndarray,
-    sphere_r: np.ndarray,
-):  # pragma: no cover - GUI
-    try:
-        import open3d as o3d
-    except ImportError as e:
-        raise SystemExit(
-            "`open3d` not installed. Install the viz extra: "
-            "`pip install -e \".[viz]\"`."
-        ) from e
-    o3d_mesh = o3d.geometry.TriangleMesh(
-        o3d.utility.Vector3dVector(np.asarray(mesh.vertices)),
-        o3d.utility.Vector3iVector(np.asarray(mesh.faces)),
-    )
-    o3d_mesh.compute_vertex_normals()
-    o3d_mesh.paint_uniform_color([0.42, 0.56, 0.72])
-    geoms = [o3d_mesh]
-    for xyz, r in zip(spheres_xyz, sphere_r):
-        s = o3d.geometry.TriangleMesh.create_sphere(radius=float(r), resolution=8)
-        s.translate(xyz)
-        s.paint_uniform_color([0.17, 0.17, 0.17])
-        s.compute_vertex_normals()
-        geoms.append(s)
-    for c in contacts:
-        s = o3d.geometry.TriangleMesh.create_sphere(radius=0.005, resolution=8)
-        s.translate(c)
-        s.paint_uniform_color([0.88, 0.48, 0.37])
-        geoms.append(s)
-    o3d.visualization.draw_geometries(geoms, window_name="equidexflow-demo")
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="equidexflow-demo", description=__doc__)
     parser.add_argument("--mesh", required=True, type=Path, help="object mesh file (.stl/.obj/.ply)")
@@ -143,7 +108,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--out", type=Path, default=Path("out") / "demo")
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--viz", action="store_true", help="open an interactive Open3D viewer (top grasp)")
+    parser.add_argument("--seat-steps", type=int, default=250,
+                        help="task-space optimization steps for seating the hand")
+    parser.add_argument("--viz", action="store_true",
+                        help="open an interactive Open3D viewer with the hand visual mesh (top grasp)")
+    parser.add_argument("--render-mesh", action="store_true",
+                        help="also write preview_mesh.png: an offscreen visual-mesh render of the top grasp")
     args = parser.parse_args(argv)
 
     rng = np.random.default_rng(args.seed)
@@ -164,7 +134,12 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
 
     pc = torch.from_numpy(pts.T).to(args.device)  # (3, N)
-    grasps = model.sample(pc, num_samples=args.num_samples)
+    # Seat the hand onto the object (refine_wrist) so the fingertips reach the
+    # predicted contacts; the raw decoder output floats off the surface.
+    print(f"[demo] seating  : task-space optimization, {args.seat_steps} steps")
+    grasps = model.sample_seated(
+        pc, num_samples=args.num_samples, n_steps=args.seat_steps,
+    )
 
     fk = AllegroRightHandFK().to(args.device).eval()
     args.out.mkdir(parents=True, exist_ok=True)
@@ -196,11 +171,29 @@ def main(argv: list[str] | None = None) -> int:
                 s_np, r_np)
     print(f"[demo] wrote {len(grasps)} grasps + {png}")
 
+    # Optional offscreen visual-mesh render (real Allegro link meshes).
+    if args.render_mesh:
+        from equidexflow.render import render_hand_offscreen
+        mesh_png = args.out / "preview_mesh.png"
+        render_hand_offscreen(
+            mesh_png,
+            top["hand_q"].cpu().numpy(),
+            top["wrist_pose"].cpu().numpy(),
+            obj_mesh=mesh,
+            contacts=top["contacts"].cpu().numpy(),
+            forces=top["forces"].cpu().numpy(),
+        )
+        print(f"[demo] wrote {mesh_png}")
+
     if args.viz:
-        _open3d_viewer(mesh,
-                       top["contacts"].cpu().numpy(),
-                       top["forces"].cpu().numpy(),
-                       s_np, r_np)
+        from equidexflow.render import view_hand
+        view_hand(
+            top["hand_q"].cpu().numpy(),
+            top["wrist_pose"].cpu().numpy(),
+            obj_mesh=mesh,
+            contacts=top["contacts"].cpu().numpy(),
+            forces=top["forces"].cpu().numpy(),
+        )
     return 0
 
 

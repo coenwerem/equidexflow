@@ -24,19 +24,46 @@ dependencies = [
 data = ["trimesh", "h5py"]                              # dataset loaders + mesh sampling
 train = ["tensorboardX", "tqdm", "pandas", "trimesh", "h5py"]
 viz = ["open3d>=0.16", "plotly", "matplotlib"]          # visualization + plot scripts
-demo = ["trimesh", "open3d>=0.16", "gdown"]             # mesh -> grasps -> posed-hand render + fetch
+demo = ["trimesh", "open3d>=0.16", "matplotlib", "gdown"]  # mesh -> grasps -> posed-hand render (2D preview needs matplotlib) + fetch
 all = ["equidexflow[data,train,viz,demo]"]
 
 [project.scripts]
 equidexflow-info = "equidexflow.cli.info:main"
 equidexflow-demo = "equidexflow.cli.demo:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+# Explicit package list (instead of find) so we can bundle the Allegro hand
+# description -- which lives at the repo-root assets/ for the clone/editable
+# workflow -- into the wheel as `equidexflow._allegro_hand` via package-dir.
+# This makes `equidexflow-demo --viz/--render-mesh` work on non-editable
+# installs too. Keep this list in sync if you add a new src subpackage.
+[tool.setuptools]
+packages = [
+    "equidexflow",
+    "equidexflow.cli",
+    "equidexflow.kinematics",
+    "equidexflow.loaders",
+    "equidexflow.losses",
+    "equidexflow.metrics",
+    "equidexflow.models",
+    "equidexflow.physics",
+    "equidexflow.render",
+    "equidexflow.trainers",
+    "equidexflow.utils",
+    "equidexflow.configs",
+    "equidexflow._allegro_hand",
+]
+
+[tool.setuptools.package-dir]
+"" = "src"
+"equidexflow._allegro_hand" = "assets/hands/allegro"
 
 [tool.setuptools.package-data]
 "equidexflow.kinematics" = ["*.json"]
 "equidexflow.configs" = ["*.yml", "*.yaml"]
+# Visual assets only (SDF + visual OBJs + material); skip the heavy FEM tet
+# meshes (*_tet.{vtk,msh,csv}) that the renderer never loads.
+"equidexflow._allegro_hand" = ["*.sdf", "meshes/*.obj", "meshes/*.mtl"]
 
 [tool.setuptools.exclude-package-data]
 "*" = ["__pycache__/*"]
+"equidexflow._allegro_hand" = ["meshes/*_tet.obj"]  # FEM tets, unused by the renderer

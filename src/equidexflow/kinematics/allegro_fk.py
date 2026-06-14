@@ -167,6 +167,11 @@ class AllegroRightHandFK(nn.Module):
         joint_axes_local = torch.zeros(self.HAND_DOF, 3)
         X_PJ_R = torch.zeros(self.HAND_DOF, 3, 3)
         X_PJ_p = torch.zeros(self.HAND_DOF, 3)
+        # Body (link) names per joint, in hand_q order, plus the wrist/root link.
+        # These match the <link name=...> entries in allegro_rh.sdf and let
+        # forward_link_frames() key world transforms by body for mesh rendering.
+        link_names: list[str] = [""] * self.HAND_DOF
+        root_link_name = cfg["fingers"][_FINGER_NAMES[0]][0]["parent"]
         for fi, fname in enumerate(_FINGER_NAMES):
             chain = cfg["fingers"][fname]
             for ji, jcfg in enumerate(chain):
@@ -174,6 +179,9 @@ class AllegroRightHandFK(nn.Module):
                 joint_axes_local[idx] = torch.tensor(_snap_axis(jcfg["axis"]))
                 X_PJ_R[idx] = torch.tensor(jcfg["R_PJ"])
                 X_PJ_p[idx] = torch.tensor(jcfg["p_PJ"])
+                link_names[idx] = jcfg["child"]
+        self.link_names = link_names              # 16 child-body names (hand_q order)
+        self.root_link_name = root_link_name      # wrist/palm body (== X_WP frame)
 
         # fingertip offset in distal-link body frame (4, 3)
         ftip = torch.zeros(self.N_FINGERS, 3)
@@ -310,6 +318,41 @@ class AllegroRightHandFK(nn.Module):
             tips_world[:, fi] = tip[:, :3]
 
         return tips_world
+
+    # ------------------------------------------------------------------
+    # Per-link body frames (for visual-mesh rendering)
+    # ------------------------------------------------------------------
+
+    def forward_link_frames(
+        self,
+        hand_q: torch.Tensor,     # (B, 16) or (16,)
+        X_WP: torch.Tensor,       # (B, 4, 4) or (4, 4) wrist pose in world frame
+    ) -> dict[str, torch.Tensor]:
+        """World pose (B, 4, 4) of every hand body, keyed by SDF link name.
+
+        The root/wrist body (``self.root_link_name``) is ``X_WP`` itself; each
+        finger link is the accumulated chain ``X_WP @ X_PC[0] @ ... @ X_PC[ji]``
+        down its joint chain. Body names match ``allegro_rh.sdf`` so a renderer
+        can place each link's visual mesh by ``X_WB @ X_BG`` (mesh-in-body pose
+        read from the SDF). Autograd-compatible.
+        """
+        if hand_q.dim() == 1:
+            hand_q = hand_q.unsqueeze(0)
+        if X_WP.dim() == 2:
+            X_WP = X_WP.unsqueeze(0)
+        if hand_q.shape[-1] != self.HAND_DOF:
+            raise ValueError(
+                f"hand_q last-dim {hand_q.shape[-1]}, expected {self.HAND_DOF}"
+            )
+
+        X_PC = self._compute_X_PC(hand_q)  # (B, 16, 4, 4)
+        frames: dict[str, torch.Tensor] = {self.root_link_name: X_WP}
+        for fi in range(self.N_FINGERS):
+            X = X_WP
+            for ji in range(4):
+                X = X @ X_PC[:, fi * 4 + ji]
+                frames[self.link_names[fi * 4 + ji]] = X
+        return frames
 
     # ------------------------------------------------------------------
     # All collision spheres (link midpoints + fingertips)

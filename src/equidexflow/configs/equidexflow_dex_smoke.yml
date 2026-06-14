@@ -1,5 +1,5 @@
 # EquiDexFlow smoke config -- short run to verify train.py end-to-end.
-# Pinned to the existing MuJoCoDex/grasp_db that the 20260430 checkpoint used.
+# Pinned to the grasp_db that the 20260430 checkpoint used.
 # Purpose: confirm the pipeline still loads data, builds the model, runs a
 # forward + backward pass, and writes a checkpoint without crashing.
 #

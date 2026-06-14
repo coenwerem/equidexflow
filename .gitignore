@@ -26,3 +26,8 @@ dist/
 
 # Local-only alt variant (Real-NVP flow / grasp_center frame); not part of release
 checkpoints/allegro_full_flow_alt/
+
+# Local-only dev scripts (paper figures / training-curve plots / sweeps). These
+# target private dataset/paper trees and are not part of the public release; kept
+# here for local use only.
+dev_scripts/

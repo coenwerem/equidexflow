@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 """Run full EquiDexFlow evaluation: all 4 variants on the 81-object test set.
 
-USAGE (run from the EquiDexFlow directory):
-    cd ~/ResearchProjects/MuJoCoDex/third_party/grasp_syn/EquiDexFlow
-    ~/ResearchProjects/MuJoCoDex/.venv/bin/python \
-        ~/ResearchProjects/frogger/scripts/equidex/run_full_eval.py \
-        --device 0
+USAGE (run from the repo root, in the project venv):
+    python scripts/run_full_eval.py --device 0
 
 PREREQUISITES:
-    - MuJoCoDex venv with torch, omegaconf, tensorboard, tqdm
-    - GPU with >=8GB VRAM (eval uses ~4GB for batch inference)
-    - Dataset: ~/ResearchProjects/frogger/outputs/datasets/dexgraspdb/v3/allegro
-    - Object meshes: ~/ResearchProjects/MuJoCoDex/assets/misc/objects
-    - Checkpoints in: outputs/training_results/<variant>/<run>/checkpoint_best.pt
+    - The project venv (`.[train]` or `.[all]`): torch, omegaconf, tqdm
+    - GPU with >=8GB VRAM (eval uses ~4GB for batch inference); CPU also works
+    - Test-split dataset + meshes fetched by `python scripts/download_assets.py --all`.
+      Override locations with EQUIDEXFLOW_DATA_DIR / EQUIDEXFLOW_OBJECTS_DIR;
+      defaults are the repo-local data/dexgraspdb/v3/<hand> and assets/objects.
+    - Checkpoints fetched by `python checkpoints/download_checkpoints.py --all`
 
 DATASET:
     81 objects | 8,099 grasps | Test split: 811 grasps
@@ -29,7 +27,7 @@ VRAM: ~4GB peak (inference only, batch_size=1 per object, 10 ODE steps)
 TIME: ~8 min per variant × 4 variants = ~32 min total on RTX 5070 Ti
 
 OUTPUT:
-    ~/ResearchProjects/frogger/outputs/paper_results/equidex/equidex_results/
+    outputs/paper_results/equidex/equidex_results/   (repo-local, gitignored)
         results_table_81obj.yaml     (aggregated table)
         <variant>/contacts.csv       (per-finger contact errors)
         <variant>/forces.csv         (per-finger force errors + FVR + WB)
@@ -94,14 +92,13 @@ VARIANTS = VARIANTS_BY_HAND["allegro"]  # default; main() overrides per --hand
 
 def _grasp_db_dir(dataset_subdir: str) -> str:
     """Resolve the dexgraspdb dir: EQUIDEXFLOW_DATA_DIR env, then the repo-local
-    copy (data/dexgraspdb/v3/<hand>), then the FRoGGeR source as a last resort."""
+    copy (data/dexgraspdb/v3/<hand>) that download_assets.py populates."""
     candidates = []
     env = os.environ.get("EQUIDEXFLOW_DATA_DIR")
     if env:
         candidates.append(Path(env) / "dexgraspdb" / "v3" / dataset_subdir)
         candidates.append(Path(env) / dataset_subdir)  # env points straight at v3/
     candidates.append(REPO_ROOT / "data" / "dexgraspdb" / "v3" / dataset_subdir)
-    candidates.append(Path.home() / f"ResearchProjects/frogger/outputs/datasets/dexgraspdb/v3/{dataset_subdir}")
     for c in candidates:
         if c.is_dir():
             return str(c)
@@ -112,10 +109,7 @@ def _object_mesh_dir() -> str:
     env = os.environ.get("EQUIDEXFLOW_OBJECTS_DIR")
     if env:
         return env
-    local = REPO_ROOT / "assets" / "objects"
-    if local.is_dir():
-        return str(local)
-    return str(Path.home() / "ResearchProjects/MuJoCoDex/assets/misc/objects")
+    return str(REPO_ROOT / "assets" / "objects")
 
 
 def _test_config(hand: str) -> dict:

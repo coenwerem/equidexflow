@@ -1,5 +1,5 @@
 """
-PyTorch Dataset wrapping the MuJoCoDex grasp database JSON files.
+PyTorch Dataset wrapping the grasp database JSON files (see data/README.md).
 
 Each item returns a ``GraspExample`` dict (see ``loaders.schema``) with
 contact positions converted to metres, quasistatic forces computed via
@@ -30,7 +30,7 @@ def _cluster_contact_finger_ids(
 ) -> np.ndarray:
     """Assign stable pseudo-finger IDs by clustering contact points.
 
-    The MuJoCoDex grasp JSON stores object contacts but not the fingertip/link
+    The grasp JSON stores object contacts but not the fingertip/link
     that produced each contact.  The dex model supervises one contact per
     finger, so use deterministic farthest-point seeds followed by a few Lloyd
     updates as a geometry-only fallback.
@@ -98,7 +98,7 @@ def collate_fn_dexgrasp(batch: list) -> dict:
 
 class DexGraspDBDataset(Dataset):
     """
-    Dataset over MuJoCoDex grasp database JSON files.
+    Dataset over the grasp database JSON files.
 
     Each ``__getitem__`` call returns one grasp as a ``GraspExample`` dict
     with the following fields and shapes (see ``loaders.schema.GraspExample``):

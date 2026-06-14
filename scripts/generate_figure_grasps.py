@@ -4,27 +4,17 @@
 Runs model.sample() on selected test objects, ranks with GraspScorer,
 and saves top-K grasps as JSON files ready for rendering on any machine.
 
-USAGE (run from the EquiDexFlow directory):
-    cd ~/ResearchProjects/MuJoCoDex/third_party/grasp_syn/EquiDexFlow
-    ~/ResearchProjects/MuJoCoDex/.venv/bin/python \
-        ~/ResearchProjects/frogger/scripts/equidex/generate_figure_grasps.py \
-        --checkpoint outputs/training_results/equidexflow_dex_full/20260521-1625/checkpoint_best.pt \
-        --variant full \
+USAGE (from the repo root, in the project venv):
+    python scripts/generate_figure_grasps.py \
+        --checkpoint allegro_full --variant full \
         --objects cube mustard_bottle bleach_cleanser sphere B2 F4 \
-        --num-samples 10 --top-k 2 \
-        --device 0 \
-        --out ~/ResearchProjects/frogger/outputs/figure_grasps/
+        --num-samples 10 --top-k 2 --device 0 \
+        --out outputs/figure_grasps/
 
-    For ablation comparison (Figure 6), run once per variant:
-    for V in full pose_only contact_only geom_only_81; do
-        CKPT=$(ls outputs/training_results/equidexflow_dex_${V}/*/checkpoint_best.pt)
-        ~/ResearchProjects/MuJoCoDex/.venv/bin/python \
-            ~/ResearchProjects/frogger/scripts/equidex/generate_figure_grasps.py \
-            --checkpoint $CKPT --variant $V \
-            --objects mustard_bottle \
-            --num-samples 10 --top-k 1 --device 0 \
-            --out ~/ResearchProjects/frogger/outputs/figure_grasps/
-    done
+    For ablation comparison, run once per variant (full pose_only contact_only
+    geom_only). Object meshes resolve from EQUIDEXFLOW_OBJECTS_DIR (default
+    assets/objects); EGAD meshes from EQUIDEXFLOW_EGAD_ROOT (default
+    ~/.cache/equidexflow/egad), both populated by scripts/download_assets.py.
 
 VRAM: ~4GB peak (single object inference)
 
@@ -59,8 +49,13 @@ def _to_serializable(v):
     return v
 
 
-_OBJ_MESH_DIR = Path.home() / "ResearchProjects/MuJoCoDex/assets/misc/objects"
-_EGAD_MESH_DIR = Path.home() / "ResearchProjects/Datasets/egad_eval_set"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+_OBJ_MESH_DIR = Path(
+    os.environ.get("EQUIDEXFLOW_OBJECTS_DIR", str(REPO_ROOT / "assets" / "objects"))
+)
+_EGAD_MESH_DIR = Path(
+    os.environ.get("EQUIDEXFLOW_EGAD_ROOT", os.path.expanduser("~/.cache/equidexflow/egad"))
+)
 
 _MESH_STEM = {
     "box": "graspit/box", "cube": "graspit/cube",
@@ -380,10 +375,15 @@ def main():
 
     from equidexflow.loaders import get_dataloader
     dataset_subdir = {"allegro": "allegro", "leap": "leap"}[args.hand]
+    _data_env = os.environ.get("EQUIDEXFLOW_DATA_DIR")
+    _grasp_db_dir = (
+        str(Path(_data_env) / "dexgraspdb" / "v3" / dataset_subdir) if _data_env
+        else str(REPO_ROOT / "data" / "dexgraspdb" / "v3" / dataset_subdir)
+    )
     ds_cfg = {
         "name": "dexgrasp",
-        "grasp_db_dir": str(Path.home() / f"ResearchProjects/frogger/outputs/datasets/dexgraspdb/v3/{dataset_subdir}"),
-        "object_mesh_dir": str(Path.home() / "ResearchProjects/MuJoCoDex/assets/misc/objects"),
+        "grasp_db_dir": _grasp_db_dir,
+        "object_mesh_dir": str(_OBJ_MESH_DIR),
         "n_object_points": 512, "max_contacts": 64,
         "mu": 0.5, "object_mass": 0.2,
         "augment": False, "split": "test", "object_names": None,

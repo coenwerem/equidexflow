@@ -4,7 +4,7 @@
 
 # EquiDexFlow
 
-**SE(3)-Equivariant 6-DoF Dexterous Grasp Generative Flows**
+**Contact-Grounded SE(3)-Equivariant 6-DoF Dexterous Grasp Generative Flows**
 
 [Project Page](https://equidexflow.github.io) &nbsp;·&nbsp;
 [Paper (arXiv)](http://arxiv.org/abs/2606.12728) &nbsp;·&nbsp;
@@ -18,9 +18,7 @@ PyTorch ≥ 2.0
 </div>
 
 EquiDexFlow takes an object point cloud and a kinematic model of a $D$-DoF, $M$-fingered robotic hand and produces, in a single forward pass: a wrist SE(3) pose, $D$ joint angles from a conditional normalizing
-flow, a set of $M$ contact points projected onto the object surface, and
-per-contact forces projected into the friction cone, all jointly consistent
-with the learned distribution. The released Allegro checkpoints use
+flow, a set of $M$ contact points projected onto the object surface, and per-contact forces projected into the friction cone, all jointly consistent with the learned distribution. The released Allegro checkpoints use
 $D{=}16$ and $M{=}4$. Both are set per-hand in the model config.
 
 ---
@@ -136,17 +134,34 @@ export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects
 
 `equidexflow-demo` is the demo entry point: mostly-watertight mesh in, grasps and preview out.
 
+The demo **seats** each grasp before visualizing it: the raw decoder output
+places the contacts on the object surface but leaves the hand floating off it, so
+the demo runs a short task-space optimization (wrist + joint angles, under the
+decoder's joint limits) that pulls the fingertips onto the predicted contacts.
+The saved pose is the seated, executable one.
+
 ```bash
-# Default: 8 grasps, headless 2-pane preview PNG
+# Default: 8 grasps, headless 2-pane preview PNG (no GL needed)
 equidexflow-demo --mesh assets/objects/frogger_ycb/006_mustard_bottle.obj \
                  --checkpoint allegro_full --num-samples 8 --out out/mustard
 
-# Interactive viewer (Open3D): object mesh + hand collision spheres + contacts
+# Offscreen visual-mesh render: writes preview_mesh.png with the real Allegro
+# link meshes wrapping the object (needs an EGL/OSMesa GL context; headless-safe)
+equidexflow-demo --mesh assets/objects/graspit/cylinder.stl --render-mesh
+
+# Interactive viewer (Open3D): object mesh + posed hand VISUAL mesh + 3D contacts
 equidexflow-demo --mesh assets/objects/graspit/cylinder.stl --viz
 ```
 
+The `--viz` and `--render-mesh` paths render the hand's actual visual meshes (via
+pure-torch FK + the hand SDF, no Drake/MuJoCo); the always-on `preview.png` is a
+lightweight 2D schematic. Tune seating with `--seat-steps` (default 250). The
+Allegro hand description is bundled in the installed package, so mesh rendering
+works on any install (editable or wheel); the `assets/objects/...` example meshes
+ship only in the source tree, so a pip-only user points `--mesh` at their own file.
+
 Each run writes one `preview.png` plus a `grasp_NN.npz` per sample containing
-the wrist pose, joint angles, contacts, forces, contact logits, and the
+the seated wrist pose, joint angles, contacts, forces, contact logits, and the
 forward-kinematics-evaluated hand sphere positions. Decoding is one line:
 
 ```python

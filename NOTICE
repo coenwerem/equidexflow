@@ -30,6 +30,15 @@ New in EquiDexFlow:
 The default training data is produced using a modified local fork of FRoGGeR (Li et al.), but EquiDexFlow does not depend on FRoGGeR at runtime: it consumes a documented JSON grasp
 schema (see data/README.md) that any synthesis backbone can emit.
 
+Allegro hand description (bundled in the package and at assets/hands/allegro/):
+  src/equidexflow/_allegro_hand/  (== assets/hands/allegro/: allegro_rh.sdf +
+  visual meshes) is vendored UNMODIFIED from FRoGGeR (Li et al., IROS 2023;
+  https://github.com/alberthli/frogger), used under the FRoGGeR repository's MIT
+  License (verified byte-identical, sha256 924dbf4d…, to alberthli/frogger
+  main/models/allegro/allegro_rh.sdf). FRoGGeR in turn adapted it from Drake's
+  allegro_hand_description (https://github.com/RobotLocomotion/drake, BSD-3-Clause)
+  by renaming links/joints, as noted in the SDF header. We modified neither.
+
 Object meshes redistributed via scripts/download_assets.py:
   - YCB object set (Calli et al., 2015) — https://www.ycbbenchmarks.com/
     Redistributed under CC BY 4.0. The specific .obj files we ship are the

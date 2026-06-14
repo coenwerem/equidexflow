@@ -338,20 +338,30 @@ class EquiDexFlow(nn.Module):
     # ------------------------------------------------------------------
 
     @torch.no_grad()
-    def sample(
+    def _decode_grasps(
         self,
         object_points: torch.Tensor,  # (B, 3, N) or (3, N)
         num_samples: int = 10,
         center: bool = True,
-    ) -> list[dict]:
-        """Generate num_samples x B grasp candidates.
+    ) -> dict:
+        """Shared decode path for :meth:`sample` and :meth:`sample_seated`.
 
-        Returns a flat list of dicts (length = B x num_samples), each with:
-            'wrist_pose'    : (4, 4)
-            'hand_q'        : (11,)
-            'contacts'      : (5, 3)
-            'forces'        : (5, 3)
-            'contact_logits': (5,)
+        Runs encode -> SE(3) ODE -> decoder heads -> surface projection and
+        returns the intermediates both consumers need, as stacked tensors of
+        length ``total = B * num_samples``:
+
+            'z'              : (total, C, 3)  encoder features
+            'wrist_gc'       : (total, 4, 4)  ODE wrist in the model's native
+                               (centered) frame -- grasp_center if
+                               ``wrist_frame == 'grasp_center'`` else base.
+                               This is what ``refine_wrist`` expects as its init.
+            'wrist_base'     : (total, 4, 4)  un-centered, base-frame wrist
+                               (ready for FK / output)
+            'hand_q'         : (total, hand_dof)
+            'contacts'       : (total, n_fingers, 3)  world frame, un-centered
+            'forces'         : (total, n_fingers, 3)
+            'contact_logits' : (total, n_fingers)
+            'pc_mean'        : (total, 3) or None
         """
         if object_points.dim() == 2:
             object_points = object_points.unsqueeze(0)  # (1, 3, N)
@@ -426,18 +436,113 @@ class EquiDexFlow(nn.Module):
         # consumers (FK, renderers, q_star assembly) always get base-frame poses.
         if self.wrist_frame == "grasp_center":
             from equidexflow.kinematics.allegro_fk import shift_wrist_frame
-            wrist_out = shift_wrist_frame(wrist_out, to_base=True)
+            wrist_base = shift_wrist_frame(wrist_out, to_base=True)
+        else:
+            wrist_base = wrist_out
 
+        return {
+            'z':              z,
+            'wrist_gc':       x_1_hat,
+            'wrist_base':     wrist_base,
+            'hand_q':         hand_q,
+            'contacts':       contacts_out,
+            'forces':         forces,
+            'contact_logits': logits,
+            'pc_mean':        pc_mean_per_sample,
+        }
+
+    @torch.no_grad()
+    def sample(
+        self,
+        object_points: torch.Tensor,  # (B, 3, N) or (3, N)
+        num_samples: int = 10,
+        center: bool = True,
+    ) -> list[dict]:
+        """Generate num_samples x B grasp candidates (raw decoder output).
+
+        Returns a flat list of dicts (length = B x num_samples), each with:
+            'wrist_pose'    : (4, 4)
+            'hand_q'        : (hand_dof,)
+            'contacts'      : (n_fingers, 3)
+            'forces'        : (n_fingers, 3)
+            'contact_logits': (n_fingers,)
+
+        The wrist/hand_q are the unseated decoder output: contacts are snapped
+        to the object surface, but the hand pose is not adjusted to reach them.
+        Use :meth:`sample_seated` for an FK-consistent, object-seated grasp.
+        """
+        dec = self._decode_grasps(object_points, num_samples, center)
+        total = dec['hand_q'].shape[0]
         results = []
         for i in range(total):
             results.append({
-                'wrist_pose':     wrist_out[i],
-                'hand_q':         hand_q[i],
-                'contacts':       contacts_out[i],
-                'forces':         forces[i],
-                'contact_logits': logits[i],
+                'wrist_pose':     dec['wrist_base'][i],
+                'hand_q':         dec['hand_q'][i],
+                'contacts':       dec['contacts'][i],
+                'forces':         dec['forces'][i],
+                'contact_logits': dec['contact_logits'][i],
             })
+        return results
 
+    def sample_seated(
+        self,
+        object_points: torch.Tensor,  # (B, 3, N) or (3, N)
+        num_samples: int = 10,
+        center: bool = True,
+        n_steps: int = 250,
+        lr: float = 0.02,
+        trust_w: float = 0.05,
+        selfcoll_w: float = 0.0,
+        return_raw: bool = False,
+    ) -> list[dict]:
+        """Sample grasps and *seat* the hand onto the object.
+
+        Same return schema as :meth:`sample`, but ``wrist_pose`` / ``hand_q``
+        are the seated pose whose FK fingertips reach the predicted contacts.
+        Seating optimizes the wrist (6 DOF) **and** ``hand_q`` jointly in task
+        space (:func:`equidexflow.kinematics.seating.seat_grasp`) under a trust
+        region and the decoder's joint limits -- far stronger than a wrist-only
+        adjustment, which cannot bring four fingertips to four contacts with a
+        single rigid move. ``contacts`` / ``forces`` / ``contact_logits`` are the
+        same surface-projected predictions as :meth:`sample`.
+
+        ``n_steps`` / ``lr`` / ``trust_w`` / ``selfcoll_w`` are forwarded to
+        :func:`seat_grasp`. With ``return_raw=True`` each dict additionally
+        carries ``'wrist_pose_raw'`` / ``'hand_q_raw'`` (the unseated decoder
+        output) for before/after comparison.
+        """
+        from equidexflow.kinematics.seating import seat_grasp
+
+        # Decode under no_grad; seat_grasp runs its own inner autograd, so it
+        # must NOT execute inside a torch.no_grad() context.
+        dec = self._decode_grasps(object_points, num_samples, center)
+
+        lo = getattr(self.hand_q_decoder, "joint_lower", None)
+        hi = getattr(self.hand_q_decoder, "joint_upper", None)
+        if lo is None or hi is None:
+            # Wide fallback limits if the decoder doesn't expose them.
+            lo = torch.full((self.hand_dof,), -3.14159, device=dec['hand_q'].device)
+            hi = torch.full((self.hand_dof,),  3.14159, device=dec['hand_q'].device)
+
+        wrist_seat, hand_q_seat = seat_grasp(
+            self.fk, dec['hand_q'], dec['wrist_base'], dec['contacts'],
+            lo, hi, n_steps=n_steps, lr=lr, trust_w=trust_w, selfcoll_w=selfcoll_w,
+        )
+
+        total = hand_q_seat.shape[0]
+        results = []
+        for i in range(total):
+            g = {
+                'wrist_pose':     wrist_seat[i].detach(),
+                'hand_q':         hand_q_seat[i].detach(),
+                'contacts':       dec['contacts'][i],
+                'forces':         dec['forces'][i],
+                'contact_logits': dec['contact_logits'][i],
+            }
+            if return_raw:
+                g['wrist_pose_raw'] = dec['wrist_base'][i]
+                g['hand_q_raw']     = dec['hand_q'][i]
+            results.append(g)
         return results
 
     # ------------------------------------------------------------------
