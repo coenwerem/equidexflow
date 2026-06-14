@@ -148,16 +148,30 @@ def main(argv: list[str] | None = None) -> int:
     seat_pts_np, seat_nrm_np = _sample_surface_with_normals(mesh, max(args.num_points * 4, 2048), rng)
     mesh_pts = torch.from_numpy(seat_pts_np).to(args.device)
     mesh_nrm = torch.from_numpy(seat_nrm_np).to(args.device)
+
+    fk = AllegroRightHandFK().to(args.device).eval()
+
+    # Full-hand collision points (palm + every link, off the visual meshes) so
+    # the penetration term pushes the WHOLE hand out, not just the sparse
+    # phalange/fingertip spheres.
+    coll_fn = None
+    if str(hand).lower() == "allegro":
+        try:
+            from equidexflow.kinematics.collision_points import build_allegro_collision_fn
+            coll_fn = build_allegro_collision_fn(fk, device=args.device)
+        except Exception as e:  # pragma: no cover - optional dep / asset issue
+            print(f"[demo] WARN: full-hand collision points unavailable ({e}); "
+                  "falling back to sphere penetration.", file=sys.stderr)
+
     # Seat the hand onto the object so the fingertips reach the predicted
     # contacts WITHOUT pushing links through the surface; the raw decoder output
     # floats off the object and is penetration-blind.
     print(f"[demo] seating  : penetration-aware task-space optimization, {args.seat_steps} steps")
     grasps = model.sample_seated(
         pc, num_samples=args.num_samples, n_steps=args.seat_steps,
-        mesh_pts=mesh_pts, mesh_nrm=mesh_nrm,
+        mesh_pts=mesh_pts, mesh_nrm=mesh_nrm, coll_points_fn=coll_fn,
     )
 
-    fk = AllegroRightHandFK().to(args.device).eval()
     args.out.mkdir(parents=True, exist_ok=True)
 
     order = _rank_grasps(grasps)

@@ -41,6 +41,7 @@ def seat_grasp(
     hi: torch.Tensor,           # (hand_dof,) joint upper limits
     mesh_pts: torch.Tensor | None = None,   # (M, 3) object surface points (world)
     mesh_nrm: torch.Tensor | None = None,   # (M, 3) outward normals
+    coll_points_fn=None,                    # (hand_q, wrist) -> (B, K, 3) world pts
     n_steps: int = 200,
     lr: float = 0.02,
     trust_w: float = 0.05,
@@ -52,6 +53,17 @@ def seat_grasp(
 
     Inputs/outputs are in the base (palm) frame -- the same convention as
     :meth:`EquiDexFlow.sample`. Detached.
+
+    ``contacts`` are the per-finger reach targets for the fingertip *centers*.
+    If the caller wants the pad surface (not the center) to meet a surface point,
+    it should offset the targets outward by the pad radius along the surface
+    normal *before* calling -- otherwise the reach term (center -> surface) fights
+    the penetration term (which holds the hand outside the surface).
+
+    Penetration term: with ``coll_points_fn`` (preferred) the SDF penalty runs
+    over a dense full-hand point cloud (palm + every link), so the *whole* hand is
+    pushed out -- not just the sparse ``forward_all_spheres`` markers. Falls back
+    to those spheres when only ``mesh_pts``/``mesh_nrm`` are given.
     """
     device = hand_q.device
     B = hand_q.shape[0]
@@ -91,7 +103,19 @@ def seat_grasp(
                 )
                 loss = loss + selfcoll_w * 0.5 * (ovr ** 2).sum(dim=(1, 2)).mean()
 
-            if mesh_pts is not None and mesh_nrm is not None:
+            if coll_points_fn is not None and mesh_pts is not None and mesh_nrm is not None:
+                # Faithful full-hand penetration: dense points off every link's
+                # visual mesh (palm included). Penalize any point inside the
+                # surface (signed < 0); points are *on* the hand surface so no
+                # radius margin is needed.
+                pts_w = coll_points_fn(q, W)                              # (B, K, 3)
+                dmat = torch.cdist(pts_w, mesh_pts.unsqueeze(0).expand(B, -1, -1))
+                ni = dmat.argmin(-1)                                      # (B, K)
+                signed = ((pts_w - mesh_pts[ni]) * mesh_nrm[ni]).sum(-1)  # (B,K) >0 out
+                pen = torch.relu(-signed).pow(2).mean()
+                loss = loss + pen_w * pen
+            elif mesh_pts is not None and mesh_nrm is not None:
+                # Fallback: sparse collision-sphere SDF (phalanges + tips only).
                 dsq = (sph.unsqueeze(2) - mesh_pts.view(1, 1, -1, 3)).pow(2).sum(-1)
                 ni = dsq.argmin(-1)
                 signed = ((sph - mesh_pts[ni]) * mesh_nrm[ni]).sum(-1)  # >0 outside

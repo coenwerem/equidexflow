@@ -495,6 +495,7 @@ class EquiDexFlow(nn.Module):
         selfcoll_w: float = 0.0,
         mesh_pts: torch.Tensor | None = None,   # (M, 3) object surface pts (object frame)
         mesh_nrm: torch.Tensor | None = None,   # (M, 3) outward unit normals
+        coll_points_fn=None,                    # (hand_q, wrist) -> (B, K, 3) full-hand pts
         pen_w: float = 50.0,
         tip_margin: float = 0.002,
         return_raw: bool = False,
@@ -539,9 +540,22 @@ class EquiDexFlow(nn.Module):
         if mesh_nrm is not None:
             mesh_nrm = mesh_nrm.to(dec['hand_q'].device, dec['hand_q'].dtype)
 
+        # Reach targets for the fingertip CENTERS. The decoder contacts sit ON the
+        # surface, but the FK fingertip is the pad center -- so target the contact
+        # offset OUTWARD by the pad radius along the surface normal. The pad then
+        # touches the contact instead of the reach term (center->surface) fighting
+        # the penetration term (which holds the hand outside the surface).
+        reach_targets = dec['contacts']
+        if mesh_pts is not None and mesh_nrm is not None:
+            with torch.no_grad():
+                d = torch.cdist(dec['contacts'], mesh_pts)        # (B, nf, M)
+                n_out = mesh_nrm[d.argmin(-1)]                    # (B, nf, 3)
+                r_tip = float(self.fk.fingertip_radius)
+                reach_targets = dec['contacts'] + r_tip * n_out
+
         wrist_seat, hand_q_seat = seat_grasp(
-            self.fk, dec['hand_q'], dec['wrist_base'], dec['contacts'],
-            lo, hi, mesh_pts=mesh_pts, mesh_nrm=mesh_nrm,
+            self.fk, dec['hand_q'], dec['wrist_base'], reach_targets,
+            lo, hi, mesh_pts=mesh_pts, mesh_nrm=mesh_nrm, coll_points_fn=coll_points_fn,
             n_steps=n_steps, lr=lr, trust_w=trust_w, selfcoll_w=selfcoll_w,
             pen_w=pen_w, tip_margin=tip_margin,
         )
