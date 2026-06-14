@@ -65,6 +65,16 @@ def build_allegro_collision_fn(
     packed = {k: torch.cat(v, dim=0) for k, v in per_link.items()}  # name -> (k, 4)
     names = list(packed.keys())
 
+    # Per-point finger id (0..3 for if/mf/rf/th, -1 for palm/base), in the same
+    # concatenation order the function emits. Lets seating do per-finger
+    # penetration gating (back off only the finger that must penetrate).
+    _finger_of = {"_if_": 0, "_mf_": 1, "_rf_": 2, "_th_": 3}
+    fid_list = []
+    for nm in names:
+        fid = next((v for k, v in _finger_of.items() if k in nm), -1)
+        fid_list.extend([fid] * packed[nm].shape[0])
+    finger_ids = torch.tensor(fid_list, dtype=torch.long, device=device)
+
     def collision_points(hand_q: torch.Tensor, wrist: torch.Tensor) -> torch.Tensor:
         frames = fk.forward_link_frames(hand_q, wrist)  # name -> (B, 4, 4)
         outs = []
@@ -75,4 +85,5 @@ def build_allegro_collision_fn(
             outs.append(Pw)
         return torch.cat(outs, dim=1)                    # (B, K, 3)
 
+    collision_points.finger_ids = finger_ids            # (K,) long, aligned to points
     return collision_points

@@ -7,9 +7,14 @@ dependency, imported lazily).
 
 from equidexflow.render.allegro_assets import VisualMesh, load_allegro_visuals
 from equidexflow.render.hand_render import (
+    DEFAULT_STYLE,
+    RenderStyle,
     build_hand_meshes,
+    build_scene_geometries,
     contact_geometries,
     render_hand_offscreen,
+    render_scene_offscreen,
+    render_scene_to_array,
     trimesh_to_o3d,
     view_hand,
 )
@@ -17,9 +22,14 @@ from equidexflow.render.hand_render import (
 __all__ = [
     "VisualMesh",
     "load_allegro_visuals",
+    "RenderStyle",
+    "DEFAULT_STYLE",
     "build_hand_meshes",
+    "build_scene_geometries",
     "contact_geometries",
     "render_hand_offscreen",
+    "render_scene_offscreen",
+    "render_scene_to_array",
     "trimesh_to_o3d",
     "view_hand",
 ]

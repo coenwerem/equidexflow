@@ -48,6 +48,7 @@ def seat_grasp(
     pen_w: float = 50.0,
     selfcoll_w: float = 0.0,
     tip_margin: float = 0.002,
+    reach_gate_tau: float = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Return (wrist (B,4,4), hand_q (B,hand_dof)) seated onto the contacts.
 
@@ -64,6 +65,14 @@ def seat_grasp(
     over a dense full-hand point cloud (palm + every link), so the *whole* hand is
     pushed out -- not just the sparse ``forward_all_spheres`` markers. Falls back
     to those spheres when only ``mesh_pts``/``mesh_nrm`` are given.
+
+    ``reach_gate_tau`` (EXPERIMENTAL, default 0 = off): when > 0 and
+    ``coll_points_fn`` exposes ``finger_ids``, each finger's reach weight is scaled
+    by ``1/(1+(pen_f/tau)^2)`` so a finger that can only reach by penetrating
+    relaxes and is pushed to the surface. In practice the coupled wrist+hand_q
+    optimizer tends to *redistribute* rather than remove penetration (the root
+    cause is an infeasible predicted contact, not seating), so this is off by
+    default; selection (GraspScorer) is the reliable lever. Kept as a knob.
     """
     device = hand_q.device
     B = hand_q.shape[0]
@@ -87,7 +96,35 @@ def seat_grasp(
             sph, radii = fk.forward_all_spheres(q, W)
             tips = sph[:, -nf:]
 
-            reach = ((tips - contacts) ** 2).sum(-1).mean()
+            # --- Full-hand penetration (computed first: per-finger depth gates
+            #     the reach term below).
+            pen_loss = None
+            per_finger_w = None
+            if coll_points_fn is not None and mesh_pts is not None and mesh_nrm is not None:
+                pts_w = coll_points_fn(q, W)                              # (B, K, 3)
+                dmat = torch.cdist(pts_w, mesh_pts.unsqueeze(0).expand(B, -1, -1))
+                ni = dmat.argmin(-1)                                      # (B, K)
+                signed = ((pts_w - mesh_pts[ni]) * mesh_nrm[ni]).sum(-1)  # (B,K) >0 out
+                pen_loss = torch.relu(-signed).pow(2).mean()
+
+                fids = getattr(coll_points_fn, "finger_ids", None)
+                if fids is not None and reach_gate_tau and reach_gate_tau > 0.0:
+                    fids = fids.to(signed.device)
+                    depth = torch.relu(-signed).detach()                 # (B,K)
+                    pen_f = torch.zeros(B, nf, device=signed.device, dtype=signed.dtype)
+                    for f in range(nf):
+                        m = fids == f
+                        if bool(m.any()):
+                            pen_f[:, f] = depth[:, m].max(dim=1).values
+                    # A finger that can only reach by penetrating relaxes its reach
+                    # so the penetration term pushes it to the surface instead.
+                    per_finger_w = 1.0 / (1.0 + (pen_f * 1000.0 / reach_gate_tau) ** 2)
+
+            if per_finger_w is not None:
+                reach = (per_finger_w * ((tips - contacts) ** 2).sum(-1)).mean()
+            else:
+                reach = ((tips - contacts) ** 2).sum(-1).mean()
+
             trust = (((trans - trans0) ** 2).sum(-1).mean()
                      + ((rot6d - rot0) ** 2).sum(-1).mean())
             lim = (torch.relu(q - hi) ** 2 + torch.relu(lo - q) ** 2).sum(-1).mean()
@@ -103,17 +140,8 @@ def seat_grasp(
                 )
                 loss = loss + selfcoll_w * 0.5 * (ovr ** 2).sum(dim=(1, 2)).mean()
 
-            if coll_points_fn is not None and mesh_pts is not None and mesh_nrm is not None:
-                # Faithful full-hand penetration: dense points off every link's
-                # visual mesh (palm included). Penalize any point inside the
-                # surface (signed < 0); points are *on* the hand surface so no
-                # radius margin is needed.
-                pts_w = coll_points_fn(q, W)                              # (B, K, 3)
-                dmat = torch.cdist(pts_w, mesh_pts.unsqueeze(0).expand(B, -1, -1))
-                ni = dmat.argmin(-1)                                      # (B, K)
-                signed = ((pts_w - mesh_pts[ni]) * mesh_nrm[ni]).sum(-1)  # (B,K) >0 out
-                pen = torch.relu(-signed).pow(2).mean()
-                loss = loss + pen_w * pen
+            if pen_loss is not None:
+                loss = loss + pen_w * pen_loss
             elif mesh_pts is not None and mesh_nrm is not None:
                 # Fallback: sparse collision-sphere SDF (phalanges + tips only).
                 dsq = (sph.unsqueeze(2) - mesh_pts.view(1, 1, -1, 3)).pow(2).sum(-1)

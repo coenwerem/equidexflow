@@ -32,3 +32,7 @@ checkpoints/allegro_full_flow_alt/
 # here for local use only.
 dev_scripts/
 src/equidexflow/kinematics/seating_leap.py
+
+# Private publication-grade renderer (house figure style). The public repo ships
+# only the neutral visual-mesh viewer in equidexflow.render; this stays local.
+figure_kit/

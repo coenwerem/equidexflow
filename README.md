@@ -142,9 +142,9 @@ object surface) that pulls the fingertips onto the predicted contacts without
 pushing the links through the object. The saved pose is the seated, executable one.
 
 ```bash
-# Default: 8 grasps, headless 2-pane preview PNG (no GL needed)
+# Default: pool of 32 candidates, headless 2-pane preview PNG (no GL needed)
 equidexflow-demo --mesh assets/objects/frogger_ycb/006_mustard_bottle.obj \
-                 --checkpoint allegro_full --num-samples 8 --out out/mustard
+                 --checkpoint allegro_full --out out/mustard
 
 # Offscreen visual-mesh render: writes preview_mesh.png with the real Allegro
 # link meshes wrapping the object (needs an EGL/OSMesa GL context; headless-safe)
@@ -153,6 +153,11 @@ equidexflow-demo --mesh assets/objects/graspit/cylinder.stl --render-mesh
 # Interactive viewer (Open3D): object mesh + posed hand VISUAL mesh + 3D contacts
 equidexflow-demo --mesh assets/objects/graspit/cylinder.stl --viz
 ```
+
+The demo draws `--num-samples` candidates (default 32; cheap), ranks them by a
+force-closure score, and seats the best `--seat-top-k` (default 4) onto the
+object. **Grasp quality scales with the pool** -- the decoder's per-object best
+needs a few dozen candidates, so raise `--num-samples` for a tighter grip.
 
 The `--viz` and `--render-mesh` paths render the hand's actual visual meshes (via
 pure-torch FK + the hand SDF, no Drake/MuJoCo); the always-on `preview.png` is a

@@ -23,7 +23,7 @@ import numpy as np
 import torch
 
 from equidexflow.api import load_checkpoint
-from equidexflow.kinematics.allegro_fk import AllegroRightHandFK
+from equidexflow.pipeline import generate_seated_grasps
 
 
 def _load_mesh_points(mesh_path: Path, n_points: int, rng: np.random.Generator):
@@ -39,21 +39,6 @@ def _load_mesh_points(mesh_path: Path, n_points: int, rng: np.random.Generator):
         raise SystemExit(f"empty mesh at {mesh_path}")
     pts, _ = trimesh.sample.sample_surface(mesh, n_points, seed=int(rng.integers(2**31)))
     return mesh, np.asarray(pts, dtype=np.float32)
-
-
-def _sample_surface_with_normals(mesh, n_points: int, rng: np.random.Generator):
-    """Surface points + outward unit normals (object frame), for the seating
-    penetration term. Denser than the model point cloud for better coverage."""
-    import trimesh
-    pts, fid = trimesh.sample.sample_surface(mesh, n_points, seed=int(rng.integers(2**31)))
-    nrm = mesh.face_normals[fid]
-    return np.asarray(pts, dtype=np.float32), np.asarray(nrm, dtype=np.float32)
-
-
-def _rank_grasps(grasps: list[dict]) -> list[int]:
-    """Rank by mean contact-logit (higher is better)."""
-    scores = [float(g["contact_logits"].mean().item()) for g in grasps]
-    return list(np.argsort(scores)[::-1])
 
 
 def _save_grasp_npz(out_dir: Path, idx: int, g: dict, spheres_xyz, sphere_r):
@@ -112,7 +97,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mesh", required=True, type=Path, help="object mesh file (.stl/.obj/.ply)")
     parser.add_argument("--checkpoint", default="allegro_full",
                         help="checkpoint key under checkpoints/ or path to checkpoint_best.pt")
-    parser.add_argument("--num-samples", type=int, default=8)
+    parser.add_argument("--num-samples", type=int, default=32,
+                        help="candidate pool size (cheap); the best few are seated. "
+                             "Grasp quality improves with a larger pool.")
+    parser.add_argument("--seat-top-k", type=int, default=4,
+                        help="how many top-ranked candidates to seat (the expensive step)")
     parser.add_argument("--num-points", type=int, default=512)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--out", type=Path, default=Path("out") / "demo")
@@ -133,7 +122,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"[demo] device      : {args.device}")
     print(f"[demo] num_samples : {args.num_samples}")
 
-    mesh, pts = _load_mesh_points(args.mesh, args.num_points, rng)
+    mesh, _ = _load_mesh_points(args.mesh, args.num_points, rng)
     print(f"[demo] mesh extents (m): {mesh.extents}")
 
     model = load_checkpoint(args.checkpoint, device=args.device)
@@ -142,42 +131,19 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[demo] WARN: checkpoint hand='{hand}' - only allegro FK is wired for the PNG render.",
               file=sys.stderr)
 
-    pc = torch.from_numpy(pts.T).to(args.device)  # (3, N)
-    # Penetration-aware surface for the seating SDF term (denser than the model
-    # point cloud, with outward normals), in the object frame.
-    seat_pts_np, seat_nrm_np = _sample_surface_with_normals(mesh, max(args.num_points * 4, 2048), rng)
-    mesh_pts = torch.from_numpy(seat_pts_np).to(args.device)
-    mesh_nrm = torch.from_numpy(seat_nrm_np).to(args.device)
-
-    fk = AllegroRightHandFK().to(args.device).eval()
-
-    # Full-hand collision points (palm + every link, off the visual meshes) so
-    # the penetration term pushes the WHOLE hand out, not just the sparse
-    # phalange/fingertip spheres.
-    coll_fn = None
-    if str(hand).lower() == "allegro":
-        try:
-            from equidexflow.kinematics.collision_points import build_allegro_collision_fn
-            coll_fn = build_allegro_collision_fn(fk, device=args.device)
-        except Exception as e:  # pragma: no cover - optional dep / asset issue
-            print(f"[demo] WARN: full-hand collision points unavailable ({e}); "
-                  "falling back to sphere penetration.", file=sys.stderr)
-
-    # Seat the hand onto the object so the fingertips reach the predicted
-    # contacts WITHOUT pushing links through the surface; the raw decoder output
-    # floats off the object and is penetration-blind.
-    print(f"[demo] seating  : penetration-aware task-space optimization, {args.seat_steps} steps")
-    grasps = model.sample_seated(
-        pc, num_samples=args.num_samples, n_steps=args.seat_steps,
-        mesh_pts=mesh_pts, mesh_nrm=mesh_nrm, coll_points_fn=coll_fn,
+    # Shared pipeline: sample pool -> force-closure rank -> seat best few -> rerank.
+    print(f"[demo] selecting: best {args.seat_top_k} of {args.num_samples} by GraspScorer, "
+          f"then penetration-aware seating ({args.seat_steps} steps)")
+    res = generate_seated_grasps(
+        model, mesh, num_samples=args.num_samples, seat_top_k=args.seat_top_k,
+        num_points=args.num_points, seat_steps=args.seat_steps,
+        seed=args.seed, device=args.device,
     )
+    grasps, order, fk = res["grasps"], res["order"], res["fk"]
+    pts = res["pc"].T.cpu().numpy()   # (N, 3) for the 2D preview
+    top = grasps[order[0]]
 
     args.out.mkdir(parents=True, exist_ok=True)
-
-    order = _rank_grasps(grasps)
-    top = grasps[order[0]]
-    print(f"[demo] {len(grasps)} grasps generated; top score (mean contact logit): "
-          f"{float(top['contact_logits'].mean()):+.3f}")
 
     # Per-grasp .npz with FK spheres
     for rank, idx in enumerate(order):

@@ -498,6 +498,7 @@ class EquiDexFlow(nn.Module):
         coll_points_fn=None,                    # (hand_q, wrist) -> (B, K, 3) full-hand pts
         pen_w: float = 50.0,
         tip_margin: float = 0.002,
+        reach_gate_tau: float = 0.0,
         return_raw: bool = False,
     ) -> list[dict]:
         """Sample grasps and *seat* the hand onto the object.
@@ -557,7 +558,7 @@ class EquiDexFlow(nn.Module):
             self.fk, dec['hand_q'], dec['wrist_base'], reach_targets,
             lo, hi, mesh_pts=mesh_pts, mesh_nrm=mesh_nrm, coll_points_fn=coll_points_fn,
             n_steps=n_steps, lr=lr, trust_w=trust_w, selfcoll_w=selfcoll_w,
-            pen_w=pen_w, tip_margin=tip_margin,
+            pen_w=pen_w, tip_margin=tip_margin, reach_gate_tau=reach_gate_tau,
         )
 
         total = hand_q_seat.shape[0]
