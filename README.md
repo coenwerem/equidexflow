@@ -154,21 +154,21 @@ equidexflow-demo --mesh assets/objects/graspit/cylinder.stl --render-mesh
 equidexflow-demo --mesh assets/objects/graspit/cylinder.stl --viz
 ```
 
-The demo draws `--num-samples` candidates (default 32; cheap), ranks them by a
+The demo draws `--num-samples` candidates (default 32), ranks them by a
 force-closure score, and seats the best `--seat-top-k` (default 4) onto the
 object. **Grasp quality scales with the pool** -- the decoder's per-object best
 needs a few dozen candidates, so raise `--num-samples` for a tighter grip.
 
 The `--viz` and `--render-mesh` paths render the hand's actual visual meshes (via
-pure-torch FK + the hand SDF, no Drake/MuJoCo); the always-on `preview.png` is a
+pure-torch FK + the hand SDF, no Drake/MuJoCo), and the always-on `preview.png` is a
 lightweight 2D schematic. Tune seating with `--seat-steps` (default 250). The
 Allegro hand description is bundled in the installed package, so mesh rendering
-works on any install (editable or wheel); the `assets/objects/...` example meshes
-ship only in the source tree, so a pip-only user points `--mesh` at their own file.
+works on any install (editable or wheel). Note that the `assets/objects/...` example meshes
+ship only in the source tree, so a pip-only user will need to point `--mesh` at their own file.
 
-Each run writes one `preview.png` plus a `grasp_NN.npz` per sample containing
+Each run above also writes one `preview.png` plus a `grasp_NN.npz` per sample containing
 the seated wrist pose, joint angles, contacts, forces, contact logits, and the
-forward-kinematics-evaluated hand sphere positions. Decoding is one line:
+forward-kinematics-evaluated hand sphere positions. Decoding from the `.npz` files can be done in one line:
 
 ```python
 import numpy as np
