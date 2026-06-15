@@ -249,7 +249,7 @@ release (see above).
 
 ## Bring Your Own Data
 
-We use FRoGGeR as the default emitter behind the checkpoints released here.
+We use [FRoGGeR](https://github.com/alberthli/frogger) as the default emitter behind the checkpoints released here.
 EquiDexFlow's trainer, however, is not tied to any synthesis backbone. The
 training script we supply reads a documented JSON grasp schema, so any dataset
 can train EquiDexFlow, provided it follows that schema. A minimal per-grasp
