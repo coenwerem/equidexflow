@@ -97,9 +97,9 @@ equidexflow-info              # quick sanity test: print version, CUDA, present 
 ## Pretrained Checkpoints & Datasets
 
 > [!NOTE]
-> The checkpoints we release are for the **Allegro Hand**. **We already trained and evaluated EquiDexFlow on the LEAP Hand asuccessfully, but thumb abduction quality on the decoded LEAP Hand grasps isn't where we'd like it to be and not on par with the Allegro Hand, so we are currently investigating GT synthesis/TTO refinements to improve thumb abduction. As a result, the LEAP Hand checkpoints are not included in our v0.1.0 release, but we hope to release them soon once the above issue is solved.** We produced the hardware results below by retargeting Allegro grasps to the LEAP Hand via inverse kinematics.
+>The checkpoints we release are for the **Allegro Hand**. **While we successfully trained and evaluated EquiDexFlow on the LEAP Hand using FRoGGeR-generated grasps, the decoded thumb abduction quality fell short of the Allegro Hand and retargeted baselines. Consequently, we have deferred releasing the LEAP Hand checkpoints. We are currently exploring ground-truth synthesis and test-time optimization (TTO) refinements to resolve this issue and intend to release these models once thumb abduction quality meets our standards.** We produced the hardware results below by retargeting Allegro grasps to the LEAP Hand via inverse kinematics.
 
-We release both Allegro checkpoints and test-split grasp dataset (811 grasps per hand) on Google Drive, pinned by sha256 in [`checkpoints/MANIFEST.yaml`](checkpoints/MANIFEST.yaml). Re-downloading leaves any file already on disk with the right hash untouched. Download them using the following commands:
+We release both Allegro checkpoints and our test-split grasp dataset (811 grasps per hand) on Google Drive, pinned by sha256 in [`checkpoints/MANIFEST.yaml`](checkpoints/MANIFEST.yaml). Re-downloading leaves any file already on disk with the right hash untouched. Download them using the following commands:
 
 ```bash
 # 4 model variants (allegro_full + 3 ablations), 4 .pt files
