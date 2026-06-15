@@ -82,7 +82,7 @@ g["contact_logits"]# (M,)    per-finger confidence
 
 ## Installation
 
-Tested on Linux, Python 3.10–3.12, PyTorch 2.0+, CUDA 11.8+ (CUDA is auto-detected, but CPU also
+Tested on Linux, Python 3.10-3.12, PyTorch 2.0+, CUDA 11.8+ (CUDA is auto-detected, but CPU also
 works for inference, only that it runs slowly once the ODE solver hits full sample counts). There are three installation flavors: `default`, `demo` (recommended), and `all`. For the full set of
 extras (`data`, `train`, `viz`, `demo`), see the project's [`pyproject.toml`](pyproject.toml).
 

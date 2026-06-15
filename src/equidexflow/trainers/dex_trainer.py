@@ -334,7 +334,7 @@ class DexGraspTrainer:
         # ## per-finger validity mask for prediction-space physics losses ##
         _, _, _, valid_f = self._per_finger_tensors(batch)
 
-        # Guard: if no per-finger data is available (finger_ids all –1), physics
+        # Guard: if no per-finger data is available (finger_ids all -1), physics
         # losses evaluate to zero rather than producing a spurious signal.
         any_valid = valid_f.any()
         if any_valid:
@@ -455,7 +455,7 @@ class DexGraspTrainer:
 
 def _aggregate_per_finger(
     data: torch.Tensor,        # (B, M, D)
-    finger_ids: torch.Tensor,  # (B, M)  values 0..N_FINGERS-1, –1 = padding
+    finger_ids: torch.Tensor,  # (B, M)  values 0..N_FINGERS-1, -1 = padding
     valid_mask: torch.Tensor,  # (B, M)  bool
     n_fingers: int | None = None,
 ) -> torch.Tensor:

@@ -103,16 +103,16 @@ class DexGraspDBDataset(Dataset):
     Each ``__getitem__`` call returns one grasp as a ``GraspExample`` dict
     with the following fields and shapes (see ``loaders.schema.GraspExample``):
 
-    * ``object_points``  – (3, n_object_points)  float32
-    * ``hand_q``         – (11,)                 float32
-    * ``wrist_pose``     – (4, 4)                float32  SE(3) matrix
-    * ``contacts``       – (max_contacts, 3)     float32  metres
-    * ``normals``        – (max_contacts, 3)     float32
-    * ``forces``         – (max_contacts, 3)     float32  Newtons
-    * ``finger_ids``     – (max_contacts,)       int64    0-4, -1 for padding
-    * ``valid_mask``     – (max_contacts,)       bool
-    * ``object_name``    – str
-    * ``grasp_quality``  – (2,)                  float32  [epsilon, volume]
+    * ``object_points``  - (3, n_object_points)  float32
+    * ``hand_q``         - (11,)                 float32
+    * ``wrist_pose``     - (4, 4)                float32  SE(3) matrix
+    * ``contacts``       - (max_contacts, 3)     float32  metres
+    * ``normals``        - (max_contacts, 3)     float32
+    * ``forces``         - (max_contacts, 3)     float32  Newtons
+    * ``finger_ids``     - (max_contacts,)       int64    0-4, -1 for padding
+    * ``valid_mask``     - (max_contacts,)       bool
+    * ``object_name``    - str
+    * ``grasp_quality``  - (2,)                  float32  [epsilon, volume]
 
     Parameters
     ----------

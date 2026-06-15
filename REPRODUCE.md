@@ -51,7 +51,7 @@ output.
 `model.sample()` draws from the wrist SE(3) flow's stochastic source (and,
 for a flow joint decoder, the joint latent z). **The eval sets no seed**,
 so the composite **Top-1 / Top-3** scores vary run-to-run by a non-trivial
-margin (observed spread on the order of ~0.3–0.5 for the Allegro Full).
+margin (observed spread on the order of ~0.3-0.5 for the Allegro Full).
 The **contact error is stable** (~0.039 m) across runs. Treat the
 published point estimates as single draws. For a tight number, fix a seed
 and report a mean ± interval over several runs. The paper's
