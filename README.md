@@ -209,8 +209,8 @@ More objects, a cube primitive plus two rotation-symmetric objects:
 Two out-of-distribution objects outside the training set, one rotation-invariant and one asymmetric, a Craftsman tape roll and a Pepsi bottle:
 
 <p align="center">
-  <video src="assets/teaser/hardware/craftsman_tape_0_cut_cropped.mp4" width="45%" autoplay loop muted playsinline controls></video>
-  <video src="assets/teaser/hardware/pepsi_bottle_0_cut_cropped.mp4" width="45%" autoplay loop muted playsinline controls></video>
+  <img src="assets/teaser/hardware_craftsman_tape.gif" width="45%" alt="Hardware execution on a LEAP Hand: Craftsman tape roll, an out-of-distribution object." />
+  <img src="assets/teaser/hardware_pepsi_bottle.gif" width="45%" alt="Hardware execution on a LEAP Hand: Pepsi bottle, an out-of-distribution object." />
   <br/>
   <sub>Left: Craftsman tape roll. &nbsp; Right: Pepsi bottle.</sub>
 </p>
