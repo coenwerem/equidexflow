@@ -114,7 +114,7 @@ def collision_penalty(
     normal_mag = nearest_normals.norm(dim=-1)              # (B, F)
     valid = (normal_mag > 1e-6).to(signed.dtype)           # (B, F) ∈ {0, 1}
 
-    # margin may be scalar or (F,); broadcast to (1, F) for subtraction.
+    # margin may be scalar or (F,). Broadcast to (1, F) for subtraction.
     if isinstance(margin, torch.Tensor):
         m = margin.to(signed.device).to(signed.dtype).unsqueeze(0)  # (1, F)
     else:
@@ -138,11 +138,12 @@ def _segment_segment_distance(
     dims (only the last, size-3, axis is the point coordinate).
 
     Pitfall guards (the well-known capsule failure modes):
-      * near-parallel segments make the line-line denominator vanish -> we clamp
-        the denominator and fall back to ``s = 0`` (any point on segment 1);
-      * degenerate zero-length segments -> ``A``/``E`` clamped away from 0;
-      * exactly-touching segments make ``d/d(dist) sqrt`` singular -> we add
-        ``eps`` inside the sqrt so the gradient stays finite at distance 0.
+      * Near-parallel segments make the line-line denominator vanish, so we
+        clamp the denominator and fall back to ``s = 0`` (any point on segment 1).
+      * Degenerate zero-length segments are handled by clamping ``A``/``E`` away
+        from 0.
+      * Exactly-touching segments make ``d/d(dist) sqrt`` singular, so we add
+        ``eps`` inside the sqrt to keep the gradient finite at distance 0.
     """
     d1 = b1 - a1
     d2 = b2 - a2
@@ -157,8 +158,8 @@ def _segment_segment_distance(
     E_safe = E.clamp_min(eps)
     denom = A * E - B * B
 
-    # s from the unconstrained line-line closest approach (clamped to [0,1]);
-    # fall back to 0 when the segments are (near-)parallel.
+    # s from the unconstrained line-line closest approach (clamped to [0,1]).
+    # Fall back to 0 when the segments are (near-)parallel.
     s = torch.where(
         denom > eps,
         ((B * F - C * E) / denom.clamp_min(eps)).clamp(0.0, 1.0),
@@ -212,8 +213,10 @@ def link_self_collision_penalty(
     ii, jj = pair_mask.nonzero(as_tuple=True)          # (P,), (P,)
     if ii.numel() == 0:
         return seg_a.new_zeros(seg_a.shape[0])
-    a1 = seg_a[:, ii]; b1 = seg_b[:, ii]               # (B, P, 3)
-    a2 = seg_a[:, jj]; b2 = seg_b[:, jj]               # (B, P, 3)
+    a1 = seg_a[:, ii]                                  # (B, P, 3)
+    b1 = seg_b[:, ii]
+    a2 = seg_a[:, jj]
+    b2 = seg_b[:, jj]
     dist = _segment_segment_distance(a1, b1, a2, b2)   # (B, P)
     rsum = (radii[ii] + radii[jj]).unsqueeze(0)        # (1, P)
     pen = F.relu(rsum + clearance - dist)              # (B, P)

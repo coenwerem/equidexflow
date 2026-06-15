@@ -13,7 +13,9 @@ License: MIT &nbsp;·&nbsp;
 Python ≥ 3.10 &nbsp;·&nbsp;
 PyTorch ≥ 2.0
 
-<img src="assets/teaser/allegro_gallery_2x8.png" width="100%" alt="Allegro grasp gallery: sixteen EquiDexFlow grasps on YCB / EGAD / GraspIt primitives." />
+<img src="assets/teaser/allegro_equivariance.png" width="100%" alt="EquiDexFlow grasps on the Allegro Hand across diverse objects and SO(3) orientations, illustrating SE(3)-equivariance: each grasp co-rotates with its object." />
+
+<sub>Grasps generated for the Allegro Hand across diverse objects and orientations. Under SE(3)-equivariance, a single generated grasp co-rotates with its object, with no re-planning.</sub>
 
 </div>
 
@@ -21,11 +23,19 @@ EquiDexFlow takes an object point cloud and a kinematic model of a $D$-DoF, $M$-
 flow, a set of $M$ contact points projected onto the object surface, and per-contact forces projected into the friction cone, all jointly consistent with the learned distribution. The released Allegro checkpoints use
 $D{=}16$ and $M{=}4$. Both are set per-hand in the model config.
 
+Beyond the equivariance, EquiDexFlow doubles as a practical **drop-in grasp generator for the Allegro Hand**: point cloud in, a batch of executable grasps out, in a single forward pass. The sixteen grasps below were all sampled from the released `allegro_full` checkpoint across YCB, EGAD, and GraspIt primitives — and the SE(3)-equivariance shown above comes for free from the architecture.
+
+<div align="center">
+<img src="assets/teaser/allegro_gallery_2x8.png" width="100%" alt="Allegro grasp gallery: sixteen EquiDexFlow grasps on YCB / EGAD / GraspIt primitives." />
+<br/>
+<sub>Sixteen grasps sampled from the released <code>allegro_full</code> checkpoint, spanning YCB objects, EGAD shapes, and GraspIt primitives.</sub>
+</div>
+
 ---
 
 ## Quickstart
 
-Clone the repo into any directory of your choosing. We use [`uv`](https://docs.astral.sh/uv/) to manage the environment; install it once with `curl -LsSf https://astral.sh/uv/install.sh | sh` (or see the uv docs for other installers). Then create an isolated Python environment:
+Clone the repo into any directory of your choosing. We use [`uv`](https://docs.astral.sh/uv/) to manage the environment. Install it once with `curl -LsSf https://astral.sh/uv/install.sh | sh` (or see the uv docs for other installers). Then create an isolated Python environment:
 
 ```bash
 uv venv --python 3.10 && source .venv/bin/activate
@@ -45,7 +55,7 @@ equidexflow-demo --mesh assets/objects/graspit/sphere.stl --checkpoint allegro_f
 ```
 
 > [!TIP]
-> `--torch-backend=auto` inspects the host for an NVIDIA driver and picks the matching CUDA wheel; on a machine with no NVIDIA GPU it falls back to the CPU wheel automatically. Pass `--torch-backend=cpu` explicitly to force the CPU build (smaller download, no `nvidia-cublas-cu12` / `nvidia-cudnn-cu12` / etc. pulled in as transitive deps). On older `uv` versions without `--torch-backend`, the equivalent is `uv pip install --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cpu -e ".[demo]"`.
+> `--torch-backend=auto` inspects the host for an NVIDIA driver and picks the matching CUDA wheel. On a machine with no NVIDIA GPU it falls back to the CPU wheel automatically. Pass `--torch-backend=cpu` explicitly to force the CPU build (smaller download, no `nvidia-cublas-cu12` / `nvidia-cudnn-cu12` / etc. pulled in as transitive deps). On older `uv` versions without `--torch-backend`, the equivalent is `uv pip install --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cpu -e ".[demo]"`.
 
 Or call the model directly from Python (pure inference):
 
@@ -65,7 +75,7 @@ grasps = model.sample(pc, num_samples=10)                # list[dict] of length 
 g = grasps[0]
 g["wrist_pose"]    # (4, 4)  SE(3) wrist pose
 g["hand_q"]        # (16,)   joint angles
-g["contacts"]      # (M, 3)  surface-projected fingertip contacts; one contact per finger => M = 4 (LEAP, Allegro)
+g["contacts"]      # (M, 3)  surface-projected fingertip contacts, one per finger, so M = 4 (LEAP, Allegro)
 g["forces"]        # (M, 3)  friction-cone-projected contact forces
 g["contact_logits"]# (M,)    per-finger confidence
 ```
@@ -76,7 +86,7 @@ Tested on Linux, Python 3.10–3.12, PyTorch 2.0+, CUDA 11.8+ (CUDA is auto-dete
 works for inference, only that it runs slowly once the ODE solver hits full sample counts). There are three installation flavors: `default`, `demo` (recommended), and `all`. For the full set of
 extras (`data`, `train`, `viz`, `demo`), see the project's [`pyproject.toml`](pyproject.toml).
 
-All install commands below assume an activated `uv` venv (see [Quickstart](#quickstart)). Pick the backend that matches your hardware — `--torch-backend=auto` picks a CUDA wheel on NVIDIA machines and the CPU wheel everywhere else; `--torch-backend=cpu` forces CPU-only and prevents the `nvidia-*` runtime packages (`nvidia-cublas-cu12`, `nvidia-cudnn-cu12`, `nvidia-nccl-cu12`, ...) from being pulled in as transitive torch dependencies.
+All install commands below assume an activated `uv` venv (see [Quickstart](#quickstart)). Pick the backend that matches your hardware — `--torch-backend=auto` picks a CUDA wheel on NVIDIA machines and the CPU wheel everywhere else. The `--torch-backend=cpu` flag forces CPU-only and prevents the `nvidia-*` runtime packages (`nvidia-cublas-cu12`, `nvidia-cudnn-cu12`, `nvidia-nccl-cu12`, ...) from being pulled in as transitive torch dependencies.
 
 ```bash
 # Pure inference (torch, numpy, scipy, omegaconf, roma)
@@ -119,8 +129,8 @@ grasp tarballs, the 28 YCB clean meshes referenced by the split (into
 `~/.cache/equidexflow/egad/`). The four GraspIt primitives are checked in
 under `assets/objects/graspit/`. The YCB clean meshes are the watertight
 variants produced by [FRoGGeR](https://github.com/alberthli/frogger)'s
-preprocessing pipeline (used under MIT); the underlying YCB geometry is
-CC BY 4.0; EGAD is CC BY-NC 4.0. See [`NOTICE`](NOTICE) for the full
+preprocessing pipeline (used under MIT). The underlying YCB geometry is
+CC BY 4.0, and EGAD is CC BY-NC 4.0. See [`NOTICE`](NOTICE) for the full
 attribution.
 
 For training on your own grasp data, set `EQUIDEXFLOW_OBJECTS_DIR` to a
@@ -147,7 +157,8 @@ equidexflow-demo --mesh assets/objects/frogger_ycb/006_mustard_bottle.obj \
                  --checkpoint allegro_full --out out/mustard
 
 # Offscreen visual-mesh render: writes preview_mesh.png with the real Allegro
-# link meshes wrapping the object (needs an EGL/OSMesa GL context; headless-safe)
+# link meshes wrapping the object. Needs an EGL/OSMesa GL context and is
+# headless-safe.
 equidexflow-demo --mesh assets/objects/graspit/cylinder.stl --render-mesh
 
 # Interactive viewer (Open3D): object mesh + posed hand VISUAL mesh + 3D contacts

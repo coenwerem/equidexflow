@@ -9,7 +9,7 @@ angles and wrist pose.
 Usage
 -----
 >>> fk = AllegroRightHandFK().to(device)
->>> # hand_q: (B, 16) joint angles; X_WP: (B, 4, 4) wrist pose in world frame
+>>> # hand_q: (B, 16) joint angles. X_WP: (B, 4, 4) wrist pose in world frame
 >>> tips_W = fk(hand_q, X_WP)               # (B, 4, 3) fingertip centres
 >>> tips_W_with_r, radii = fk.with_radii(hand_q, X_WP)
 >>> # radii: (4,) fingertip sphere radii in metres
@@ -403,7 +403,7 @@ class AllegroRightHandFK(nn.Module):
     ) -> dict[str, torch.Tensor]:
         """World pose (B, 4, 4) of every hand body, keyed by SDF link name.
 
-        The root/wrist body (``self.root_link_name``) is ``X_WP`` itself; each
+        The root/wrist body (``self.root_link_name``) is ``X_WP`` itself. Each
         finger link is the accumulated chain ``X_WP @ X_PC[0] @ ... @ X_PC[ji]``
         down its joint chain. Body names match ``allegro_rh.sdf`` so a renderer
         can place each link's visual mesh by ``X_WB @ X_BG`` (mesh-in-body pose

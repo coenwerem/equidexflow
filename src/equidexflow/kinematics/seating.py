@@ -8,7 +8,7 @@ land on the predicted contacts, under a trust region (stay near the sampled
 wrist), a joint-limit barrier, and an optional mesh-penetration term.
 
 Pure torch (autograd through :class:`AllegroRightHandFK`), framework-agnostic.
-This is the same routine the paper's figure pipeline uses; it is far stronger
+This is the same routine the paper's figure pipeline uses. It is far stronger
 than a wrist-only adjustment, which cannot bring four fingertips to four
 contacts with a single rigid move.
 """
@@ -89,7 +89,7 @@ def seat_grasp(
     relaxes and is pushed to the surface. In practice the coupled wrist+hand_q
     optimizer tends to *redistribute* rather than remove penetration (the root
     cause is an infeasible predicted contact, not seating), so this is off by
-    default; selection (GraspScorer) is the reliable lever. Kept as a knob.
+    default. Selection (GraspScorer) is the reliable lever. Kept as a knob.
     """
     device = hand_q.device
     B = hand_q.shape[0]
