@@ -243,6 +243,79 @@ class AllegroRightHandFK(nn.Module):
         )
         self._n_link_spheres = n_link
 
+        # --- Per-link capsule segments (for link-link self-collision + ----------
+        #     inter-finger clustering). Each finger link is a capsule from its
+        #     joint origin to the next joint (or the fingertip offset for the
+        #     distal link), expressed in the link's own body frame. Unlike the
+        #     collision spheres above we keep ALL 16 links (no _MIN_LINK_LENGTH
+        #     filter): a capsule models the full segment, and short proximal
+        #     links are cheap and can still collide across fingers.
+        caps_extent = torch.zeros(self.HAND_DOF, 3)
+        caps_radius = torch.zeros(self.HAND_DOF)
+        caps_finger = torch.zeros(self.HAND_DOF, dtype=torch.long)
+        caps_depth = torch.zeros(self.HAND_DOF, dtype=torch.long)
+        for fi, fname in enumerate(_FINGER_NAMES):
+            chain = cfg["fingers"][fname]
+            for ji in range(4):
+                idx = fi * 4 + ji
+                if ji < 3:
+                    extent = torch.tensor(chain[ji + 1]["p_PJ"], dtype=torch.float32)
+                else:
+                    extent = torch.tensor(
+                        cfg["fingertip_offsets"][fname], dtype=torch.float32
+                    )
+                link_len = float(extent.norm())
+                caps_extent[idx] = extent
+                caps_radius[idx] = min(0.014, max(0.010, link_len * 0.25))
+                caps_finger[idx] = fi
+                caps_depth[idx] = ji
+
+        # Upper-triangular pair mask: which (i<j) link capsules to evaluate for
+        # self-collision. Exclude self-pairs and same-finger pairs whose depths
+        # are adjacent (|d_i - d_j| <= 1) -- consecutive links share a joint and
+        # always nearly touch, so they would be false positives. Same-finger
+        # NON-adjacent pairs (e.g. distal vs proximal of a curled finger) and all
+        # cross-finger pairs are kept. (Standard practice: FRoGGeR/Grasp'D/BODex
+        # all exclude neighboring links in the chain.)
+        L = self.HAND_DOF
+        pair_mask = torch.zeros(L, L, dtype=torch.bool)
+        for i in range(L):
+            for j in range(i + 1, L):
+                same_finger = bool(caps_finger[i] == caps_finger[j])
+                adjacent = bool((caps_depth[i] - caps_depth[j]).abs() <= 1)
+                if same_finger and adjacent:
+                    continue
+                pair_mask[i, j] = True
+
+        # Non-persistent: these are deterministic from the kinematics config, so
+        # they are recomputed in __init__ and kept out of the state_dict (no
+        # spurious "missing key" on loading checkpoints saved before this term).
+        self.register_buffer("_caps_extent", caps_extent, persistent=False)   # (16, 3)
+        self.register_buffer("_caps_radius", caps_radius, persistent=False)   # (16,)
+        self.register_buffer("_caps_finger", caps_finger, persistent=False)   # (16,)
+        self.register_buffer("_caps_depth", caps_depth, persistent=False)     # (16,)
+        self.register_buffer("_caps_pair_mask", pair_mask, persistent=False)  # (16,16) bool
+
+        # Rest-pose calibration: drop any kept pair that is ALREADY in capsule
+        # collision at the neutral (hand_q = 0) configuration. A single midline
+        # capsule with generous radii can overlap on bulky links (notably the
+        # thumb base, depth-0 vs depth-2) even when the real link meshes do not
+        # -- a capsule-fit artifact, not a collision. Removing those pairs keeps
+        # the neutral pose at exactly zero self-collision penalty, so the term
+        # only ever fires on motion-induced overlap.
+        from equidexflow.kinematics.collision import _segment_segment_distance
+        with torch.no_grad():
+            sa, sb, rr = self.forward_link_capsules(
+                torch.zeros(self.HAND_DOF), torch.eye(4)
+            )
+            ci, cj = pair_mask.nonzero(as_tuple=True)
+            for i, j in zip(ci.tolist(), cj.tolist()):
+                gap = _segment_segment_distance(
+                    sa[:, i], sb[:, i], sa[:, j], sb[:, j]
+                )[0] - (rr[i] + rr[j])
+                if float(gap) <= 0.0:
+                    pair_mask[i, j] = False
+
     # ------------------------------------------------------------------
     # Shared: batched joint transforms
     # ------------------------------------------------------------------
@@ -416,6 +489,54 @@ class AllegroRightHandFK(nn.Module):
             self.fingertip_radius.expand(self.N_FINGERS),
         ])
         return all_pos, all_radii
+
+    # ------------------------------------------------------------------
+    # Per-link capsule segments (link-link self-collision + clustering)
+    # ------------------------------------------------------------------
+
+    def forward_link_capsules(
+        self,
+        hand_q: torch.Tensor,     # (B, 16) or (16,)
+        X_WP: torch.Tensor,       # (B, 4, 4) or (4, 4) wrist pose in world frame
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """FK to per-link capsule segments in the world frame.
+
+        Each of the 16 finger links is modeled as a capsule (line segment +
+        radius) from its joint origin (``seg_a``) to the next joint / fingertip
+        offset (``seg_b``). Rides on :meth:`forward_link_frames`, so it is a
+        rigid (hence differentiable) map of ``hand_q`` / ``X_WP``.
+
+        Returns
+        -------
+        seg_a : (B, 16, 3) capsule start (link joint origin) in world.
+        seg_b : (B, 16, 3) capsule end (next joint / fingertip) in world.
+        radii : (16,) capsule radius per link in metres.
+        """
+        if hand_q.dim() == 1:
+            hand_q = hand_q.unsqueeze(0)
+        if X_WP.dim() == 2:
+            X_WP = X_WP.unsqueeze(0)
+        if hand_q.shape[-1] != self.HAND_DOF:
+            raise ValueError(
+                f"hand_q last-dim {hand_q.shape[-1]}, expected {self.HAND_DOF}"
+            )
+
+        B = hand_q.shape[0]
+        device = hand_q.device
+        dtype = hand_q.dtype
+        frames = self.forward_link_frames(hand_q, X_WP)  # name -> (B, 4, 4)
+
+        a_list, b_list = [], []
+        for idx in range(self.HAND_DOF):
+            X = frames[self.link_names[idx]]              # (B, 4, 4)
+            a_list.append(X[:, :3, 3])                    # (B, 3) joint origin
+            ext = torch.zeros(B, 4, device=device, dtype=dtype)
+            ext[:, :3] = self._caps_extent[idx].to(dtype)
+            ext[:, 3] = 1.0
+            b_list.append((X @ ext.unsqueeze(-1)).squeeze(-1)[:, :3])
+        seg_a = torch.stack(a_list, dim=1)                # (B, 16, 3)
+        seg_b = torch.stack(b_list, dim=1)                # (B, 16, 3)
+        return seg_a, seg_b, self._caps_radius.to(dtype)
 
     @property
     def n_collision_spheres(self) -> int:

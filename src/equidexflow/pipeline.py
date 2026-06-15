@@ -35,6 +35,8 @@ def rank_grasps_quality(grasps, fk, coll_fn, mesh_pts, mesh_nrm, object_pc) -> l
 
     scorer = GraspScorer(mu=0.5, object_mass=0.2)
     phys = scorer.batch_physics_score([dict(g) for g in grasps], object_pc)  # (K,) higher better
+    from equidexflow.kinematics.collision import link_self_collision_penalty
+
     keys = []
     for i, g in enumerate(grasps):
         pen_mm = 0.0
@@ -45,7 +47,19 @@ def rank_grasps_quality(grasps, fk, coll_fn, mesh_pts, mesh_nrm, object_pc) -> l
                 ni = torch.cdist(P, mesh_pts).argmin(1)
                 signed = ((P - mesh_pts[ni]) * mesh_nrm[ni]).sum(-1)
                 pen_mm = float(torch.relu(-signed).max()) * 1000.0
-        keys.append(-float(phys[i]) + 0.1 * pen_mm)
+        # Worst finger-link self-collision (capsule overlap) in mm, as a small
+        # tie-breaker so the rendered top grasp is geometrically clean.
+        link_mm = 0.0
+        with torch.no_grad():
+            seg_a, seg_b, caps_r = fk.forward_link_capsules(
+                g["hand_q"].unsqueeze(0).to(mesh_pts.device),
+                g["wrist_pose"].unsqueeze(0).to(mesh_pts.device),
+            )
+            link_pen = link_self_collision_penalty(
+                seg_a, seg_b, caps_r, fk._caps_pair_mask, clearance=0.0,
+            )
+            link_mm = float(link_pen[0]) * 1000.0
+        keys.append(-float(phys[i]) + 0.1 * pen_mm + 0.1 * link_mm)
     return list(np.argsort(keys))
 
 

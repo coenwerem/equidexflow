@@ -36,3 +36,6 @@ src/equidexflow/kinematics/seating_leap.py
 # Private publication-grade renderer (house figure style). The public repo ships
 # only the neutral visual-mesh viewer in equidexflow.render; this stays local.
 figure_kit/
+
+# Local-only finger-link self-collision / anti-clustering tests (not shipped).
+tests/test_self_collision.py

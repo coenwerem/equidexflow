@@ -234,24 +234,16 @@ Drake harness, since both are platform-specific. What ships here is the model
 that generated the grasps in these clips.
 
 ## Reproducing the Paper's Results
-This release reproduces the **model-side** numbers in the paper: the
-grasp-quality table over the four ablations on the 81-object test split,
-the per-metric contact / force / rollout / equivariance / diversity
-breakdowns, and the inference-time ablations.
-
-One command after `download_checkpoints` and `download_assets`:
+This release reproduces the **model-side** numbers in the paper: the grasp-quality table over the four ablations on the 81-object test split, the per-metric contact / force / rollout / equivariance / diversity breakdowns, and the inference-time ablations. To reproduce our results, run the following command (after the `download_checkpoints` and `download_assets` steps). You can optionally pin a GPU by passing `--device 0` to the shell script call:
 
 ```bash
-./scripts/reproduce.sh                 # CPU/GPU autodetect
-./scripts/reproduce.sh --device 0      # pin a GPU
+./scripts/reproduce.sh  # CPU/GPU autodetect
 ```
 
 For per-metric breakdowns and individual evaluation commands, see
 [**REPRODUCE.md**](REPRODUCE.md). Caveat: `model.sample()` is stochastic
 and the eval sets no seed by default. REPRODUCE.md documents the expected
-spread on composite scores.
-
-The paper's physics validation and hardware numbers come from these same
+spread on composite scores. Our paper's physics validation and hardware numbers come from these same
 checkpoints, but the simulators and controller behind them sit outside this
 release (see above).
 

@@ -1,4 +1,9 @@
-"""CPU smoke tests - no dataset, no GPU. Run: pytest tests/test_smoke.py"""
+"""CPU inference-pipeline tests - no dataset, no GPU.
+
+Covers the core path end to end: model build + sample, Allegro forward
+kinematics (link frames), SDF visual-mesh resolution, grasp seating, and
+checkpoint loading. Run: pytest tests/test_inference_pipeline.py
+"""
 import glob
 
 import torch

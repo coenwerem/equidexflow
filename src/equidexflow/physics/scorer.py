@@ -19,21 +19,31 @@ import torch.nn.functional as F
 
 from equidexflow.kinematics.grasp_map import compute_grasp_map, wrench_balance_residual
 from equidexflow.kinematics.friction_cone import friction_cone_violation_rate
-from equidexflow.kinematics.collision import collision_penalty, self_collision_penalty
+from equidexflow.kinematics.collision import (
+    collision_penalty,
+    self_collision_penalty,
+    link_self_collision_penalty,
+    inter_finger_clustering_penalty,
+)
 
 
 class GraspScorer:
     """Scores and ranks dexterous grasp candidates.
 
     Scoring formula (Equation 9 from problem formulation):
-        J(q, C, F; O) = β1*Q_geom + β2*Q_phys + β3*Q_task - β4*Q_risk + β5*Q_consist
+        J(q, C, F; O) = β1*Q_geom + β2*Q_phys + β3*Q_task - β4*Q_risk
+                        + β5*Q_consist - β6*Q_cluster
 
     where:
-        Q_geom  = -collision_penalty - self_collision_penalty (geometric feasibility)
+        Q_geom  = -collision_penalty - self_collision_penalty (geometric feasibility),
+                  minus FK link-link self-collision (capsule overlap) when FK +
+                  hand_q are available
         Q_phys  = -wrench_balance_residual - friction_cone_violation_rate (physics quality)
         Q_task  = min singular value of G  (GWS quality proxy)
-        Q_risk  = contact_spread_variance (uncertainty proxy)
+        Q_risk  = contact_spread_variance of PREDICTED contacts (uncertainty proxy)
         Q_consist = -mean FK fingertip-to-predicted-contact gap (kinematic consistency)
+        Q_cluster = inter-finger min-distance hinge on the REALIZED (seated) FK
+                    geometry (catches post-seat clustering that Q_risk cannot)
 
     FK collision (optional):
         When ``fk_module`` is provided, Q_geom also includes a heavy penalty
@@ -50,20 +60,24 @@ class GraspScorer:
         beta3: float = 1.0,   # task weight
         beta4: float = 0.5,   # risk weight
         beta5: float = 0.0,   # FK-contact consistency weight
+        beta6: float = 1.0,   # realized-pose clustering weight
         mu: float = 0.5,
         object_mass: float = 0.2,
         fk_module: torch.nn.Module | None = None,
         fk_collision_weight: float = 5.0,
+        linkcoll_weight: float = 5.0,
     ) -> None:
         self.beta1 = beta1
         self.beta2 = beta2
         self.beta3 = beta3
         self.beta4 = beta4
         self.beta5 = beta5
+        self.beta6 = beta6
         self.mu = mu
         self.object_mass = object_mass
         self.fk = fk_module
         self.fk_collision_weight = fk_collision_weight
+        self.linkcoll_weight = linkcoll_weight
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -188,6 +202,28 @@ class GraspScorer:
                 )  # (K,)
                 Q_geom = Q_geom - self.fk_collision_weight * fk_coll
 
+        # -- Link-link self-collision + realized-pose clustering --
+        # Needs FK + per-candidate hand_q/wrist (NOT object normals), so it is
+        # gated separately from the object-penetration term above.
+        Q_cluster = torch.zeros(K, device=device)
+        if self.fk is not None and all(
+            "hand_q" in c and "wrist_pose" in c for c in candidates
+        ):
+            hq = torch.stack(
+                [self._to_tensor(c["hand_q"]) for c in candidates]
+            ).to(device)
+            wr = torch.stack(
+                [self._to_tensor(c["wrist_pose"]) for c in candidates]
+            ).to(device)
+            seg_a, seg_b, caps_r = self.fk.forward_link_capsules(hq, wr)
+            link_sc = link_self_collision_penalty(
+                seg_a, seg_b, caps_r, self.fk._caps_pair_mask,
+            )                                                  # (K,)
+            Q_geom = Q_geom - self.linkcoll_weight * link_sc
+            Q_cluster = inter_finger_clustering_penalty(
+                seg_a, seg_b, caps_r, self.fk._caps_finger,
+            )                                                  # (K,)
+
         # -- Q_phys --
         wb   = wrench_balance_residual(
             contacts, normals, forces, valid_mask,
@@ -228,6 +264,7 @@ class GraspScorer:
             + self.beta3 * Q_task
             - self.beta4 * Q_risk
             + self.beta5 * Q_consist
+            - self.beta6 * Q_cluster
         )
         return scores  # (K,)
 

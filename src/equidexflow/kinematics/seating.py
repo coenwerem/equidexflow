@@ -18,6 +18,11 @@ from __future__ import annotations
 import torch
 import torch.nn.functional as F
 
+from equidexflow.kinematics.collision import (
+    inter_finger_clustering_penalty,
+    link_self_collision_penalty,
+)
+
 
 def _rot6d_to_R(x: torch.Tensor) -> torch.Tensor:
     """(...,6) -> (...,3,3) via Gram-Schmidt (differentiable)."""
@@ -47,6 +52,10 @@ def seat_grasp(
     trust_w: float = 0.05,
     pen_w: float = 50.0,
     selfcoll_w: float = 0.0,
+    linkcoll_w: float = 5.0,
+    cluster_w: float = 2.0,
+    link_clearance: float = 0.002,
+    personal_space: float = 0.015,
     tip_margin: float = 0.002,
     reach_gate_tau: float = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
@@ -60,6 +69,14 @@ def seat_grasp(
     it should offset the targets outward by the pad radius along the surface
     normal *before* calling -- otherwise the reach term (center -> surface) fights
     the penetration term (which holds the hand outside the surface).
+
+    Self-collision / clustering: ``linkcoll_w`` (>0 by default) penalizes
+    overlapping finger-link *capsules* (full phalanges, adjacent same-finger
+    links excluded) and ``cluster_w`` penalizes fingers bunching together via a
+    per-finger-pair minimum-distance hinge with margin ``personal_space``. Both
+    act on the realized FK at every step, so seating actively separates fingers.
+    The legacy ``selfcoll_w`` (fingertip pairs only, default 0) is subsumed by
+    ``linkcoll_w`` and kept off for back-compat.
 
     Penetration term: with ``coll_points_fn`` (preferred) the SDF penalty runs
     over a dense full-hand point cloud (palm + every link), so the *whole* hand is
@@ -139,6 +156,21 @@ def seat_grasp(
                     torch.eye(nf, device=device, dtype=torch.bool), 0.0
                 )
                 loss = loss + selfcoll_w * 0.5 * (ovr ** 2).sum(dim=(1, 2)).mean()
+
+            # --- Link-link self-collision + inter-finger clustering, on the
+            #     full per-link capsule geometry (not just the fingertips).
+            if linkcoll_w > 0.0 or cluster_w > 0.0:
+                seg_a, seg_b, caps_r = fk.forward_link_capsules(q, W)
+                if linkcoll_w > 0.0:
+                    loss = loss + linkcoll_w * link_self_collision_penalty(
+                        seg_a, seg_b, caps_r, fk._caps_pair_mask,
+                        clearance=link_clearance,
+                    ).mean()
+                if cluster_w > 0.0:
+                    loss = loss + cluster_w * inter_finger_clustering_penalty(
+                        seg_a, seg_b, caps_r, fk._caps_finger,
+                        personal_space=personal_space,
+                    ).mean()
 
             if pen_loss is not None:
                 loss = loss + pen_w * pen_loss

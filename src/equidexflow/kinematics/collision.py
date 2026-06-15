@@ -124,6 +124,144 @@ def collision_penalty(
     return penalty.sum(dim=-1)                             # (B,)
 
 
+def _segment_segment_distance(
+    a1: torch.Tensor,  # (..., 3) segment-1 start
+    b1: torch.Tensor,  # (..., 3) segment-1 end
+    a2: torch.Tensor,  # (..., 3) segment-2 start
+    b2: torch.Tensor,  # (..., 3) segment-2 end
+    eps: float = 1e-9,
+) -> torch.Tensor:     # (...,)
+    """Differentiable closest distance between two 3-D line segments.
+
+    Vectorized clamped-``(s, t)`` solution (Ericson, *Real-Time Collision
+    Detection*, ``ClosestPtSegmentSegment``). Broadcasts over arbitrary leading
+    dims (only the last, size-3, axis is the point coordinate).
+
+    Pitfall guards (the well-known capsule failure modes):
+      * near-parallel segments make the line-line denominator vanish -> we clamp
+        the denominator and fall back to ``s = 0`` (any point on segment 1);
+      * degenerate zero-length segments -> ``A``/``E`` clamped away from 0;
+      * exactly-touching segments make ``d/d(dist) sqrt`` singular -> we add
+        ``eps`` inside the sqrt so the gradient stays finite at distance 0.
+    """
+    d1 = b1 - a1
+    d2 = b2 - a2
+    r = a1 - a2
+    A = (d1 * d1).sum(-1)        # |seg1|^2
+    E = (d2 * d2).sum(-1)        # |seg2|^2
+    F = (d2 * r).sum(-1)
+    B = (d1 * d2).sum(-1)
+    C = (d1 * r).sum(-1)
+
+    A_safe = A.clamp_min(eps)
+    E_safe = E.clamp_min(eps)
+    denom = A * E - B * B
+
+    # s from the unconstrained line-line closest approach (clamped to [0,1]);
+    # fall back to 0 when the segments are (near-)parallel.
+    s = torch.where(
+        denom > eps,
+        ((B * F - C * E) / denom.clamp_min(eps)).clamp(0.0, 1.0),
+        torch.zeros_like(denom),
+    )
+    t = (B * s + F) / E_safe
+    # If the corresponding t fell outside [0,1], pin t to the nearer endpoint and
+    # recompute s for that endpoint (decided on the *unclamped* t).
+    s = torch.where(t < 0.0, (-C / A_safe).clamp(0.0, 1.0), s)
+    s = torch.where(t > 1.0, ((B - C) / A_safe).clamp(0.0, 1.0), s)
+    t = t.clamp(0.0, 1.0)
+
+    c1 = a1 + s.unsqueeze(-1) * d1
+    c2 = a2 + t.unsqueeze(-1) * d2
+    diff = c1 - c2
+    return torch.sqrt((diff * diff).sum(-1) + eps)
+
+
+def capsule_capsule_distance(
+    a1: torch.Tensor, b1: torch.Tensor, r1: torch.Tensor | float,
+    a2: torch.Tensor, b2: torch.Tensor, r2: torch.Tensor | float,
+    eps: float = 1e-9,
+) -> torch.Tensor:
+    """Surface distance between two capsules (segment distance minus radii).
+
+    Negative values mean interpenetration. Differentiable, broadcasts like
+    :func:`_segment_segment_distance`.
+    """
+    return _segment_segment_distance(a1, b1, a2, b2, eps=eps) - (r1 + r2)
+
+
+def link_self_collision_penalty(
+    seg_a: torch.Tensor,        # (B, L, 3) capsule starts (world)
+    seg_b: torch.Tensor,        # (B, L, 3) capsule ends (world)
+    radii: torch.Tensor,        # (L,) capsule radii
+    pair_mask: torch.Tensor,    # (L, L) bool, upper-tri pairs to evaluate
+    clearance: float = 0.002,   # extra margin so contact is penalized early
+) -> torch.Tensor:              # (B,)
+    """One-sided hinge penalty on overlapping finger-link capsules.
+
+    Over every ``pair_mask`` pair ``(i, j)``::
+
+        penalty_ij = ReLU(r_i + r_j + clearance - dist(cap_i, cap_j))
+
+    summed over pairs. This is the DexGraspNet ``E_spen`` one-sided hinge, but on
+    capsule (segment) geometry rather than point spheres, and with adjacent
+    same-finger links already removed from ``pair_mask`` (the standard
+    false-positive exclusion). The ``clearance`` band yields a non-zero gradient
+    just before contact, so the optimizer separates links *before* they overlap.
+    """
+    ii, jj = pair_mask.nonzero(as_tuple=True)          # (P,), (P,)
+    if ii.numel() == 0:
+        return seg_a.new_zeros(seg_a.shape[0])
+    a1 = seg_a[:, ii]; b1 = seg_b[:, ii]               # (B, P, 3)
+    a2 = seg_a[:, jj]; b2 = seg_b[:, jj]               # (B, P, 3)
+    dist = _segment_segment_distance(a1, b1, a2, b2)   # (B, P)
+    rsum = (radii[ii] + radii[jj]).unsqueeze(0)        # (1, P)
+    pen = F.relu(rsum + clearance - dist)              # (B, P)
+    return pen.sum(dim=-1)                             # (B,)
+
+
+def inter_finger_clustering_penalty(
+    seg_a: torch.Tensor,            # (B, L, 3) capsule starts (world)
+    seg_b: torch.Tensor,            # (B, L, 3) capsule ends (world)
+    radii: torch.Tensor,            # (L,) capsule radii
+    finger_ids: torch.Tensor,       # (L,) long, link -> finger id
+    personal_space: float = 0.015,  # min surface clearance between fingers
+) -> torch.Tensor:                  # (B,)
+    """Anti-clustering hinge on the *realized* (post-seat) finger geometry.
+
+    For each unordered finger pair ``(f, g)`` we take the minimum capsule
+    surface distance over all of their link pairs and penalize::
+
+        penalty_fg = ReLU(personal_space - min_dist_surface(f, g))
+
+    summed over the C(n_fingers, 2) pairs. Unlike the scorer's predicted-contact
+    variance (``Q_risk``), this sees the actual seated links, so it catches
+    fingers that bunch together only after contact-IK + seating. The larger
+    ``personal_space`` margin keeps fingers spread even when they are not yet
+    colliding (which is what :func:`link_self_collision_penalty` handles).
+    """
+    fids = finger_ids.to(seg_a.device)
+    uniq = torch.unique(fids).tolist()
+    B = seg_a.shape[0]
+    pen = seg_a.new_zeros(B)
+    for ai in range(len(uniq)):
+        for bi in range(ai + 1, len(uniq)):
+            idx_f = (fids == uniq[ai]).nonzero(as_tuple=True)[0]
+            idx_g = (fids == uniq[bi]).nonzero(as_tuple=True)[0]
+            # All link pairs between the two fingers: (B, nf, ng).
+            a1 = seg_a[:, idx_f][:, :, None, :]
+            b1 = seg_b[:, idx_f][:, :, None, :]
+            a2 = seg_a[:, idx_g][:, None, :, :]
+            b2 = seg_b[:, idx_g][:, None, :, :]
+            a1, b1, a2, b2 = torch.broadcast_tensors(a1, b1, a2, b2)
+            dist = _segment_segment_distance(a1, b1, a2, b2)        # (B, nf, ng)
+            rsum = (radii[idx_f][:, None] + radii[idx_g][None, :])  # (nf, ng)
+            surf = dist - rsum.unsqueeze(0)                          # (B, nf, ng)
+            d_min = surf.reshape(B, -1).min(dim=1).values            # (B,)
+            pen = pen + F.relu(personal_space - d_min)
+    return pen
+
+
 def self_collision_penalty(
     fingertip_positions: torch.Tensor,  # (B, F, 3)
     min_distance: float = 0.01,         # 1 cm minimum finger separation
