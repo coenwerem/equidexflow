@@ -107,7 +107,7 @@ equidexflow-info              # quick sanity test: print version, CUDA, present 
 ## Pretrained Checkpoints & Datasets
 
 > [!NOTE]
->The checkpoints we release are for the **Allegro Hand**. **While we successfully trained and evaluated EquiDexFlow on the LEAP Hand using FRoGGeR-generated grasps, the decoded thumb abduction quality fell short of the Allegro Hand and retargeted baselines. Consequently, we have deferred releasing the LEAP Hand checkpoints. We are currently exploring ground-truth synthesis and test-time optimization (TTO) refinements to resolve this issue and intend to release these models once thumb abduction quality meets our standards.** We produced the hardware results below by retargeting Allegro grasps to the LEAP Hand via inverse kinematics.
+> EquiDexFlow is synthesized, trained, and evaluated natively on both the **Allegro Hand** and the **LEAP Hand**. We release the Allegro checkpoints here because the grasp generator's conventions align most closely with Allegro kinematics. Native LEAP checkpoints are in progress and will follow once they reach the same fidelity. The hardware results below were produced by retargeting generated Allegro grasps to the LEAP Hand via inverse kinematics.
 
 We release both Allegro checkpoints and our test-split grasp dataset (811 grasps per hand) on Google Drive, pinned by sha256 in [`checkpoints/MANIFEST.yaml`](checkpoints/MANIFEST.yaml). Re-downloading leaves any file already on disk with the right hash untouched. Download them using the following commands:
 
@@ -145,9 +145,10 @@ export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects
 `equidexflow-demo` is the demo entry point: mostly-watertight mesh in, grasps and preview out.
 
 <div align="center">
-<img src="assets/teaser/demo_gallery.png" width="100%" alt="EquiDexFlow demo output: seated Allegro grasps on a sphere, cylinder, cube, tomato soup can, mustard bottle, potted meat can, and tennis ball." />
+<img src="assets/teaser/demo_gallery.png" width="100%" alt="EquiDexFlow demo output: seated Allegro grasps on a baseball, foam brick, Rubik's cube, gelatin box, tomato soup can, tennis ball, and pear." />
+<br/>
+<sub>Top-ranked tabletop grasps from <code>equidexflow-demo --render-mesh</code> on the released <code>allegro_full</code> checkpoint (baseball, foam brick, Rubik's cube, gelatin box, soup can, tennis ball, pear).</sub>
 <br/><br/>
-<sub>Top-ranked seated grasps straight from <code>equidexflow-demo --render-mesh</code> on the released <code>allegro_full</code> checkpoint (sphere, cylinder, cube, tomato soup can, mustard bottle, potted meat can, tennis ball).</sub>
 </div>
 
 ```bash
@@ -219,8 +220,8 @@ More objects, a cube primitive plus two rotation-symmetric objects:
 Two out-of-distribution objects outside the training set, one rotation-invariant and one asymmetric, a Craftsman tape roll and a Pepsi bottle:
 
 <p align="center">
-  <img src="assets/teaser/hardware_craftsman_tape.gif" width="45%" alt="Hardware execution on a LEAP Hand: Craftsman tape roll, an out-of-distribution object." />
-  <img src="assets/teaser/hardware_pepsi_bottle.gif" width="45%" alt="Hardware execution on a LEAP Hand: Pepsi bottle, an out-of-distribution object." />
+  <img src="assets/teaser/hardware_craftsman_tape.gif" width="36%" alt="Hardware execution on a LEAP Hand: Craftsman tape roll, an out-of-distribution object." />
+  <img src="assets/teaser/hardware_pepsi_bottle.gif" width="36%" alt="Hardware execution on a LEAP Hand: Pepsi bottle, an out-of-distribution object." />
   <br/>
   <sub>Left: Craftsman tape roll. &nbsp; Right: Pepsi bottle.</sub>
 </p>

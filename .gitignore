@@ -39,3 +39,10 @@ figure_kit/
 
 # Local-only finger-link self-collision / anti-clustering tests (not shipped).
 tests/test_self_collision.py
+
+# assets — ignore all frogger_ycb meshes except the four shipped objects
+assets/objects/frogger_ycb/*
+!assets/objects/frogger_ycb/005_tomato_soup_can.obj
+!assets/objects/frogger_ycb/006_mustard_bottle.obj
+!assets/objects/frogger_ycb/010_potted_meat_can.obj
+!assets/objects/frogger_ycb/056_tennis_ball.obj
