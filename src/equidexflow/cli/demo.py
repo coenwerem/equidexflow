@@ -106,8 +106,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--out", type=Path, default=Path("out") / "demo")
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--seat-steps", type=int, default=250,
-                        help="task-space optimization steps for seating the hand")
+    parser.add_argument("--seat-steps", type=int, default=400,
+                        help="closest-point contact-IK (conform) iterations for seating the hand")
     parser.add_argument("--viz", action="store_true",
                         help="open an interactive Open3D viewer with the hand visual mesh (top grasp)")
     parser.add_argument("--render-mesh", action="store_true",

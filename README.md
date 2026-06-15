@@ -144,12 +144,11 @@ export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects
 
 `equidexflow-demo` is the demo entry point: mostly-watertight mesh in, grasps and preview out.
 
-The demo **seats** each grasp before visualizing it: the raw decoder output
-places the contacts on the object surface but leaves the hand floating off it, so
-the demo runs a short **penetration-aware** task-space optimization (wrist + joint
-angles, under the decoder's joint limits, with a signed-distance term against the
-object surface) that pulls the fingertips onto the predicted contacts without
-pushing the links through the object. The saved pose is the seated, executable one.
+<div align="center">
+<img src="assets/teaser/demo_gallery.png" width="100%" alt="EquiDexFlow demo output: seated Allegro grasps on a sphere, cylinder, cube, tomato soup can, mustard bottle, potted meat can, and tennis ball." />
+<br/><br/>
+<sub>Top-ranked seated grasps straight from <code>equidexflow-demo --render-mesh</code> on the released <code>allegro_full</code> checkpoint (sphere, cylinder, cube, tomato soup can, mustard bottle, potted meat can, tennis ball).</sub>
+</div>
 
 ```bash
 # Default: pool of 32 candidates, headless 2-pane preview PNG (no GL needed)

@@ -69,7 +69,7 @@ def generate_seated_grasps(
     *,
     num_samples: int = 32,
     num_points: int = 512,
-    seat_steps: int = 250,
+    seat_steps: int = 400,
     seat_top_k: int = 4,
     seed: int = 0,
     device: str = "cpu",
@@ -90,7 +90,7 @@ def generate_seated_grasps(
     ``coll_fn``, ``fk``.
     """
     from equidexflow.kinematics.allegro_fk import AllegroRightHandFK
-    from equidexflow.kinematics.seating import seat_grasp
+    from equidexflow.kinematics.seating import conform_to_surface
 
     rng = np.random.default_rng(seed)
     torch.manual_seed(seed)
@@ -121,21 +121,22 @@ def generate_seated_grasps(
     except Exception:
         cand = list(range(k))
 
-    # Stage 2: seat only the candidates (batched), with pad-offset reach targets.
+    # Stage 2: conform the raw candidates onto the object surface (closest-point
+    # contact-IK -- the faithful seating behind the paper figures). Each
+    # fingertip is pulled to its NEAREST surface point (re-queried as it moves),
+    # with the wrist rotation held fixed, so fingers distribute over the surface
+    # in a wrap instead of collapsing toward the decoder's raw (possibly
+    # clustered) predicted contacts. Conform operates on the RAW decoded grasp
+    # (not a prior reach pass), matching frogger's conform_to_surface path.
     hand_q = torch.stack([raw[i]["hand_q"] for i in cand]).to(device)
     wrist = torch.stack([raw[i]["wrist_pose"] for i in cand]).to(device)
-    contacts = torch.stack([raw[i]["contacts"] for i in cand]).to(device)
     lo = getattr(model.hand_q_decoder, "joint_lower", None)
     hi = getattr(model.hand_q_decoder, "joint_upper", None)
     if lo is None or hi is None:
         lo = torch.full((hand_q.shape[-1],), -3.14159, device=device)
         hi = torch.full((hand_q.shape[-1],), 3.14159, device=device)
-    r_tip = float(fk.fingertip_radius)
-    n_out = mesh_nrm[torch.cdist(contacts, mesh_pts).argmin(-1)]         # (k, nf, 3)
-    reach_targets = contacts + r_tip * n_out
-    wrist_s, hand_q_s = seat_grasp(
-        fk, hand_q, wrist, reach_targets, lo, hi,
-        mesh_pts=mesh_pts, mesh_nrm=mesh_nrm, coll_points_fn=coll_fn, n_steps=seat_steps,
+    wrist_s, hand_q_s = conform_to_surface(
+        fk, hand_q, wrist, mesh, lo, hi, n_iters=seat_steps,
     )
 
     grasps = []

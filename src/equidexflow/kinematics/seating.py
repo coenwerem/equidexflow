@@ -53,7 +53,7 @@ def seat_grasp(
     pen_w: float = 50.0,
     selfcoll_w: float = 0.0,
     linkcoll_w: float = 5.0,
-    cluster_w: float = 2.0,
+    cluster_w: float = 0.0,
     link_clearance: float = 0.002,
     personal_space: float = 0.015,
     tip_margin: float = 0.002,
@@ -70,13 +70,18 @@ def seat_grasp(
     normal *before* calling -- otherwise the reach term (center -> surface) fights
     the penetration term (which holds the hand outside the surface).
 
-    Self-collision / clustering: ``linkcoll_w`` (>0 by default) penalizes
-    overlapping finger-link *capsules* (full phalanges, adjacent same-finger
-    links excluded) and ``cluster_w`` penalizes fingers bunching together via a
-    per-finger-pair minimum-distance hinge with margin ``personal_space``. Both
-    act on the realized FK at every step, so seating actively separates fingers.
-    The legacy ``selfcoll_w`` (fingertip pairs only, default 0) is subsumed by
-    ``linkcoll_w`` and kept off for back-compat.
+    Self-collision: ``linkcoll_w`` (>0 by default) penalizes overlapping
+    finger-link *capsules* (full phalanges, adjacent same-finger links excluded)
+    on the realized FK at every step, so seating resolves real finger-through-
+    finger interpenetration while leaving the wrap otherwise intact. The legacy
+    ``selfcoll_w`` (fingertip pairs only, default 0) is subsumed by it.
+
+    ``cluster_w`` (anti-clustering, default 0 = OFF): a per-finger-pair
+    minimum-*fingertip*-distance hinge. It is off by default because maximizing
+    pairwise fingertip distance is a poor grasp objective -- it pries fingers
+    apart and slides the hand to wherever they can splay (a one-face/base grasp),
+    distorting otherwise-good wraps. ``linkcoll_w`` already prevents the
+    finger-pile-up this was meant to address. Kept as an opt-in knob.
 
     Penetration term: with ``coll_points_fn`` (preferred) the SDF penalty runs
     over a dense full-hand point cloud (palm + every link), so the *whole* hand is
@@ -193,3 +198,125 @@ def seat_grasp(
         W[:, :3, 3] = trans
         qf = q.clamp(lo, hi)
     return W.detach(), qf.detach()
+
+
+def conform_to_surface(
+    fk,
+    hand_q: torch.Tensor,       # (B, hand_dof) raw decoded joints
+    wrist: torch.Tensor,        # (B, 4, 4) raw decoded wrist (base frame)
+    mesh,                       # trimesh object mesh, SAME frame as the hand
+    lo: torch.Tensor,           # (hand_dof,) joint lower limits
+    hi: torch.Tensor,           # (hand_dof,) joint upper limits
+    n_iters: int = 400,
+    lr: float = 0.02,
+    query_every: int = 10,
+    link_push_w: float = 5.0,
+    pen_thresh: float = 5e-4,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Exact closest-point contact-IK -- the faithful seating behind the paper
+    figures (port of frogger ``conform_to_surface``).
+
+    Places each fingertip sphere *tangent to the mesh* -- its target is the
+    NEAREST point on the actual object surface (re-queried every ``query_every``
+    steps), offset outward by the fingertip radius along the (centroid-flipped)
+    surface normal -- and pushes any penetrating link spheres back out. It
+    optimizes a 3-DOF wrist **translation** plus the hand joints with the wrist
+    **rotation held fixed**, so the decoded approach orientation is preserved and
+    the fingers conform to the surface instead of collapsing toward the decoder's
+    raw (possibly clustered) predicted contacts.
+
+    Unlike :func:`seat_grasp` (which pulls fingertips to the decoder's fixed,
+    index-matched contacts with a free 6-DOF wrist), this targets the live
+    surface and locks rotation -- the difference that keeps fingers distributed
+    in a wrap rather than splayed onto one face. Deterministic and equivariant:
+    the result depends only on the (co-rotating) input grasp and mesh.
+
+    Inputs/outputs are in the object's native frame -- the same frame
+    ``EquiDexFlow.sample`` returns (un-centered wrist + contacts).
+    """
+    import numpy as np
+    import trimesh  # noqa: F401  (mesh is already a trimesh)
+
+    device = hand_q.device
+    if hand_q.dim() == 1:
+        hand_q = hand_q.unsqueeze(0)
+    if wrist.dim() == 2:
+        wrist = wrist.unsqueeze(0)
+    B = hand_q.shape[0]
+    nf = fk.N_FINGERS
+    lo = lo.to(device)
+    hi = hi.to(device)
+
+    pq = trimesh.proximity.ProximityQuery(mesh)
+    ctr = np.asarray(mesh.centroid, dtype=np.float64)
+    face_normals = np.asarray(mesh.face_normals)
+
+    R0 = wrist[:, :3, :3].detach().clone()          # wrist rotation: FIXED
+    t0 = wrist[:, :3, 3].detach().clone()
+    dt = torch.zeros(B, 3, device=device, requires_grad=True)
+    q = hand_q.detach().clone().requires_grad_(True)
+    opt = torch.optim.Adam([dt, q], lr=lr)
+    eye = torch.eye(4, device=device).repeat(B, 1, 1)
+
+    # Sphere radii are pose-independent buffers; read once at the zero pose.
+    _, radii = fk.forward_all_spheres(
+        torch.zeros(1, fk.HAND_DOF, device=device),
+        torch.eye(4, device=device).unsqueeze(0),
+    )
+    radii_np = radii.detach().cpu().numpy()
+    rt = radii_np[-nf:]                              # fingertip radii
+    rl = radii_np[:-nf]                              # link-sphere radii
+    n_link = rl.shape[0]
+    rt_b = np.tile(rt, B)
+    rl_b = np.tile(rl, B)
+
+    def wrist_mat() -> torch.Tensor:
+        W = eye.clone()
+        W[:, :3, :3] = R0
+        W[:, :3, 3] = t0 + dt
+        return W
+
+    def outward_target(pts: "np.ndarray", r: "np.ndarray") -> "np.ndarray":
+        """Nearest surface point + r * outward normal (flipped via centroid)."""
+        cl, _, fid = pq.on_surface(pts)
+        n = face_normals[fid].copy()
+        flip = ((n * (cl - ctr)).sum(1) < 0)
+        n[flip] *= -1.0
+        return cl + r[:, None] * n
+
+    tip_tgt = None
+    lnk = None
+    with torch.enable_grad():
+        for it in range(n_iters):
+            opt.zero_grad()
+            sph, _ = fk.forward_all_spheres(q, wrist_mat())    # (B, S, 3)
+            sn = sph.detach().cpu().numpy()
+            if it % query_every == 0:
+                tip_pts = sn[:, -nf:].reshape(-1, 3)
+                tip_tgt = torch.as_tensor(
+                    outward_target(tip_pts, rt_b).reshape(B, nf, 3),
+                    dtype=sph.dtype, device=device,
+                )
+                link_pts = sn[:, :n_link].reshape(-1, 3)
+                sd = pq.signed_distance(link_pts) + rl_b        # >0 => penetrating
+                m = sd > pen_thresh
+                if m.any():
+                    idx = torch.as_tensor(np.where(m)[0], device=device)
+                    tgt = torch.as_tensor(
+                        outward_target(link_pts[m], rl_b[m]),
+                        dtype=sph.dtype, device=device,
+                    )
+                    lnk = (idx, tgt)
+                else:
+                    lnk = None
+            tips = sph[:, -nf:]
+            loss = ((tips - tip_tgt) ** 2).sum()
+            if lnk is not None:
+                link_flat = sph[:, :n_link].reshape(-1, 3)
+                loss = loss + link_push_w * ((link_flat[lnk[0]] - lnk[1]) ** 2).sum()
+            loss.backward()
+            opt.step()
+            with torch.no_grad():
+                q.clamp_(lo, hi)
+
+    return wrist_mat().detach(), q.detach().clamp(lo, hi)

@@ -43,7 +43,10 @@ class GraspScorer:
         Q_risk  = contact_spread_variance of PREDICTED contacts (uncertainty proxy)
         Q_consist = -mean FK fingertip-to-predicted-contact gap (kinematic consistency)
         Q_cluster = inter-finger min-distance hinge on the REALIZED (seated) FK
-                    geometry (catches post-seat clustering that Q_risk cannot)
+                    geometry. OFF by default (beta6=0): maximizing pairwise
+                    fingertip distance distorts good wraps into splayed one-face
+                    grasps. Finger-link interpenetration is handled by the
+                    Q_geom capsule self-collision term instead.
 
     FK collision (optional):
         When ``fk_module`` is provided, Q_geom also includes a heavy penalty
@@ -60,7 +63,7 @@ class GraspScorer:
         beta3: float = 1.0,   # task weight
         beta4: float = 0.5,   # risk weight
         beta5: float = 0.0,   # FK-contact consistency weight
-        beta6: float = 1.0,   # realized-pose clustering weight
+        beta6: float = 0.0,   # realized-pose clustering weight (OFF: see note)
         mu: float = 0.5,
         object_mass: float = 0.2,
         fk_module: torch.nn.Module | None = None,

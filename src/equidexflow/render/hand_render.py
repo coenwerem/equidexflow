@@ -38,13 +38,15 @@ class RenderStyle:
     camera, supersampling, materials) and threads it through the same functions.
     """
 
-    # Palette. Public default: a single neutral gray hand (no black-body /
-    # white-tip signature), a neutral gray-blue object.
-    body_color: tuple = (0.55, 0.55, 0.57)
-    tip_color: tuple = (0.60, 0.60, 0.62)
-    object_color: tuple = (0.60, 0.63, 0.68)
+    # Palette. Public default: a muted, presentable "lite" look -- a slightly
+    # dark hand body with softly lighter fingertips (so tip vs link is legible),
+    # over a soft-blue object. Intentionally tamer than the figure kit's
+    # high-contrast near-black-body / bright-white-tip / steel-blue signature.
+    body_color: tuple = (0.34, 0.34, 0.36)
+    tip_color: tuple = (0.74, 0.74, 0.76)
+    object_color: tuple = (0.55, 0.64, 0.82)
     contact_color: tuple = (0.85, 0.47, 0.36)
-    distinguish_tips: bool = False          # paper kit sets True for tip color
+    distinguish_tips: bool = True           # tips render in tip_color (vs body)
 
     # Lighting / background.
     background: tuple = (1.0, 1.0, 1.0, 1.0)
