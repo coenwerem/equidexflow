@@ -206,6 +206,15 @@ More objects, a cube primitive plus two rotation-symmetric objects:
   <sub>Left to right: cube primitive, cylinder primitive, tennis ball.</sub>
 </p>
 
+Two out-of-distribution objects outside the training set, one rotation-invariant and one asymmetric, a Craftsman tape roll and a Pepsi bottle:
+
+<p align="center">
+  <video src="assets/teaser/hardware/craftsman_tape_0_cut_cropped.mp4" width="45%" autoplay loop muted playsinline controls></video>
+  <video src="assets/teaser/hardware/pepsi_bottle_0_cut_cropped.mp4" width="45%" autoplay loop muted playsinline controls></video>
+  <br/>
+  <sub>Left: Craftsman tape roll. &nbsp; Right: Pepsi bottle.</sub>
+</p>
+
 ### Simulation: Shake-Test Robustness
 We also stress-test the decoded grasps in [Drake](https://drake.mit.edu/) with
 the [GenDexGrasp](https://github.com/tengyu-liu/GenDexGrasp)/[GAGrasp](https://arxiv.org/abs/2503.04123) force-perturbation-based shake protocol: gravity off, a ±*xyz* inertial load on
