@@ -13,6 +13,9 @@ License: MIT &nbsp;·&nbsp;
 Python ≥ 3.10 &nbsp;·&nbsp;
 PyTorch ≥ 2.0
 
+[![Models on HF](https://img.shields.io/badge/%F0%9F%A4%97-Models-lightgrey)](https://huggingface.co/cenwerem/equidexflow-allegro-full)
+[![Dataset on HF](https://img.shields.io/badge/%F0%9F%A4%97-Dataset-lightgrey)](https://huggingface.co/datasets/cenwerem/equidexflow-grasps)
+
 <img src="assets/teaser/allegro_equivariance.png" width="100%" alt="EquiDexFlow grasps on the Allegro Hand across diverse objects and SO(3) orientations, illustrating SE(3)-equivariance: each grasp co-rotates with its object." />
 
 <sub>Grasps generated for the Allegro Hand across diverse objects and orientations. Under SE(3)-equivariance, a single generated grasp co-rotates with its object, with no re-planning.</sub>
