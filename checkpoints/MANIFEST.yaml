@@ -98,9 +98,11 @@ datasets:
     note: test split only (811 grasps); set DexGraspDBDataset(pre_split=True). Full data regenerable via FRoGGeR.
   dexgraspdb_v3_leap:
     drive_id: 1Mj4meWzq9h_wh5xZCN0Gel-nubjhBWkK
-    sha256: 98b5ad9c5637e5716789076e9b234dad511b33b39450fdb302caa03ca0a6de9d
+    sha256: 1e1ff624f6380dea57be2405734e43a56e87a6cf3a9aa65973335549967a8a66
     size_mb: 3
-    n_objects: 82
+    n_objects: 81
+    n_grasps: 811
+    split: test-only (811 of 8100)
     note: test split only (811 grasps); set DexGraspDBDataset(pre_split=True). Full data regenerable via FRoGGeR.
 objects:
   objects_ycb:
