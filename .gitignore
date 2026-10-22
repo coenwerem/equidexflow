@@ -46,3 +46,6 @@ assets/objects/frogger_ycb/*
 !assets/objects/frogger_ycb/006_mustard_bottle.obj
 !assets/objects/frogger_ycb/010_potted_meat_can.obj
 !assets/objects/frogger_ycb/056_tennis_ball.obj
+
+# jupyter
+**notebooks/.ipynb_checkpoints
