@@ -22,6 +22,13 @@ PyTorch ≥ 2.0
 
 </div>
 
+> [!IMPORTANT]
+> To our knowledge, EquiDexFlow is the first learned robotic dexterous grasp generator to jointly generate articulated hand configuration, fingertip contacts, contact normals, and friction-constrained contact forces within an end-to-end SE(3)-equivariant architecture.
+
+> [!INFO]
+>**Why Use EquiDexFlow?** Across humanoid and manufacturing companies and robotic hand vendors, the dominant expense is *grasp data*, and one of its multipliers is object orientation. To make a learned grasping system orientation-robust typically entails augmenting the dataset with rotated object copies (often $10$ to $100\times$). EquiDexFlow eliminates this orientation tax **by construction**, as its $\mathrm{SE(3)}$-equivariance property enables training on grasps at a single canonical pose and deploying across all of $\mathrm{SO(3)}$ with no rotation augmentation, so a generated grasp co-rotates with its object and needs no re-planning. It can therefore serve as a 6-DoF dexterous grasp generator (point cloud in $\rightarrow$ ranked executable grasps out in one forward pass), and every generated grasp holds per-contact forces in the friction cone tied to a force-closure objective the generator optimizes directly, and not a bolted-on evaluator.
+
+## Overview
 EquiDexFlow takes an object point cloud and a kinematic model of a $D$-DoF, $M$-fingered robotic hand and produces, in a single forward pass: a wrist SE(3) pose, $D$ joint angles from a conditional normalizing
 flow, a set of $M$ contact points projected onto the object surface, and per-contact forces projected into the friction cone, all jointly consistent with the learned distribution. The released Allegro checkpoints use
 $D{=}16$ and $M{=}4$. Both are set per-hand in the model config.
@@ -33,11 +40,9 @@ Beyond the equivariance, EquiDexFlow doubles as a practical **drop-in grasp gene
 <br/>
 <sub>Sixteen grasps sampled from the released <code>allegro_full</code> checkpoint, spanning YCB objects, EGAD shapes, and GraspIt primitives.</sub>
 </div>
-
 ---
 
 ## Quickstart
-
 Clone the repo into any directory of your choosing. We use [`uv`](https://docs.astral.sh/uv/) to manage the environment. Install it once with `curl -LsSf https://astral.sh/uv/install.sh | sh` (or see the uv docs for other installers). Then create an isolated Python environment:
 
 ```bash
@@ -84,7 +89,6 @@ g["contact_logits"]# (M,)    per-finger confidence
 ```
 
 ## Installation
-
 Tested on Linux, Python 3.10-3.12, PyTorch 2.0+, CUDA 11.8+ (CUDA is auto-detected, but CPU also
 works for inference, only that it runs slowly once the ODE solver hits full sample counts). There are three installation flavors: `default`, `demo` (recommended), and `all`. For the full set of
 extras (`data`, `train`, `viz`, `demo`), see the project's [`pyproject.toml`](pyproject.toml).
@@ -108,7 +112,6 @@ equidexflow-info              # quick sanity test: print version, CUDA, present 
 ```
 
 ## Pretrained Checkpoints & Datasets
-
 > [!NOTE]
 > EquiDexFlow is synthesized, trained, and evaluated natively on both the **Allegro Hand** and the **LEAP Hand**. We release the Allegro checkpoints here because the grasp generator's conventions align most closely with Allegro kinematics. Native LEAP checkpoints are in progress and will follow once they reach the same fidelity. The hardware results below were produced by retargeting generated Allegro grasps to the LEAP Hand via inverse kinematics.
 
@@ -144,7 +147,6 @@ export EQUIDEXFLOW_OBJECTS_DIR=/path/to/objects
 ```
 
 ## Demo and Visualization
-
 `equidexflow-demo` is the demo entry point: mostly-watertight mesh in, grasps and preview out.
 
 <div align="center">
@@ -192,42 +194,34 @@ g.files  # ['wrist_pose', 'hand_q', 'contacts', 'forces', 'contact_logits',
 ```
 
 ## Hardware & Simulation Results
-
 ### Hardware Execution
 We retarget the Allegro grasps from this codebase to a physical [LEAP Hand](https://leaphand.com/) on a 6-DoF
 [FAIR Innovation FR3 cobot (ZArm 622)](https://www.frtech.fr/FR/5.html) via inverse kinematics, then run them across several objects. We do not perform re-planning for the rotated case. Under equivariance, each grasp rotates together with the object, and the same grasp was reachable and executable in both the 0&deg; and 120&deg; configurations. In practice, however, the wrist poses associated with some grasps in the 120&deg; configuration admitted inverse-kinematics solutions with higher Yoshikawa manipulability indices than the grasp selected from the 0&deg; seed configuration, leading those grasps to be chosen at execution time.
 
 
-<p align="center">
-  <img src="assets/teaser/hardware_2x2.gif" width="72%" alt="2x2 hardware execution panel: box primitive and potted-meat can, each at 0 and 120 deg, on a LEAP Hand." />
-  <br/>
-  <sub><b>Top row:</b> box primitive at 0&deg; / 120&deg;. &nbsp; <b>Bottom row:</b> potted-meat can at 0&deg; / 120&deg;.</sub>
-</p>
+<table align="center">
+  <tr>
+    <td width="42%"><img src="assets/teaser/hw_setup.png" width="100%" alt="Hardware setup: a LEAP Hand on a 6-DoF ZArm cobot, an object-silhouette-marked pedestal, and a ZED 2i stereo camera on a tripod at right." /></td>
+    <td width="58%">A LEAP Hand on a 6-DoF ZArm cobot grasps objects on an object-silhouette-marked pedestal. A <a href="https://www.stereolabs.com/store/products/zed-2i"><b>ZED&nbsp;2i</b></a> stereo camera (right) supplies a <b>single-shot object-pose advisory</b> before each grasp: the wrist target is recomputed from the perceived object pose (the decoded grasp is stored in the object frame), so execution is perception-informed &mdash; open-loop, not visual servoing. The demo clips below are cropped to the arm and object, so the camera and tripod fall outside frame.</td>
+  </tr>
+</table>
 
-The YCB mustard bottle, also under the 0&deg; $\rightarrow$ 120&deg; co-rotation:
+Each clip pairs one object at its canonical $0^\circ$ pose (left) with the $R_z(120^\circ)$-rotated pose (right) &mdash; the same generated grasp, co-transformed by equivariance, not re-planned. The first four are asymmetric; the last two cover rotation-invariant and out-of-distribution objects.
 
-<p align="center">
-  <img src="assets/teaser/hardware_mustard_2up.gif" width="72%" alt="Hardware execution on a LEAP Hand: YCB mustard bottle at 0 and 120 deg." />
-  <br/>
-  <sub>Left: 0&deg;. &nbsp; Right: 120&deg;.</sub>
-</p>
-
-More objects, a cube primitive plus two rotation-symmetric objects:
-
-<p align="center">
-  <img src="assets/teaser/hardware_more_3up.gif" width="80%" alt="Hardware execution on a LEAP Hand: cube primitive, cylinder primitive, and tennis ball." />
-  <br/>
-  <sub>Left to right: cube primitive, cylinder primitive, tennis ball.</sub>
-</p>
-
-Two out-of-distribution objects outside the training set, one rotation-invariant and one asymmetric, a Craftsman tape roll and a Pepsi bottle:
-
-<p align="center">
-  <img src="assets/teaser/hardware_craftsman_tape.gif" width="36%" alt="Hardware execution on a LEAP Hand: Craftsman tape roll, an out-of-distribution object." />
-  <img src="assets/teaser/hardware_pepsi_bottle.gif" width="36%" alt="Hardware execution on a LEAP Hand: Pepsi bottle, an out-of-distribution object." />
-  <br/>
-  <sub>Left: Craftsman tape roll. &nbsp; Right: Pepsi bottle.</sub>
-</p>
+<table align="center">
+  <tr>
+    <td align="center" width="50%"><img src="assets/teaser/graspit_box_pair.gif" width="100%" alt="Box primitive grasped on a LEAP Hand at 0 and 120 degrees." /><br/><sub><b>Box primitive</b></sub></td>
+    <td align="center" width="50%"><img src="assets/teaser/potted_meat_pair.gif" width="100%" alt="Potted-meat can grasped on a LEAP Hand at 0 and 120 degrees." /><br/><sub><b>Potted-meat can</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/teaser/mustard_pair.gif" width="100%" alt="YCB mustard bottle grasped on a LEAP Hand at 0 and 120 degrees." /><br/><sub><b>YCB mustard bottle</b></sub></td>
+    <td align="center"><img src="assets/teaser/cube_pair.gif" width="100%" alt="Cube primitive grasped on a LEAP Hand at 0 and 120 degrees." /><br/><sub><b>Cube primitive</b> &mdash; 4-fold (90&deg;) symmetry, so 120&deg; &equiv; 30&deg;</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/teaser/symmetric_pair.gif" width="100%" alt="Cylinder primitive and tennis ball grasped on a LEAP Hand." /><br/><sub><b>Rotation-invariant</b> &mdash; cylinder, tennis ball</sub></td>
+    <td align="center"><img src="assets/teaser/ood_pair.gif" width="100%" alt="Craftsman tape roll and PET bottle grasped on a LEAP Hand, out-of-distribution objects." /><br/><sub><b>Out-of-distribution</b> &mdash; Craftsman tape, PET bottle</sub></td>
+  </tr>
+</table>
 
 ### Simulation: Shake-Test Robustness
 We also stress-test the decoded grasps in [Drake](https://drake.mit.edu/) with
