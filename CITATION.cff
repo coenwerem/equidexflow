@@ -1,0 +1,30 @@
+# Citation metadata for EquiDexFlow. Renders a "Cite this repository" button on GitHub.
+# arXiv ID verified against https://arxiv.org/abs/2606.12728 (title/authors/cs.RO, v1 2026-06-10, v2 2026-06-12).
+cff-version: 1.2.0
+message: "If you use EquiDexFlow (code, dataset, or paper) in your work, please cite the paper below."
+title: "EquiDexFlow: Contact-Grounded SE(3)-Equivariant Dexterous Grasp Generative Flows"
+authors:
+  - family-names: Enwerem
+    given-names: Clinton
+  - family-names: Baras
+    given-names: John S.
+  - family-names: Belta
+    given-names: Calin
+license: MIT
+url: "https://equidexflow.github.io"
+repository-code: "https://github.com/coenwerem/equidexflow"
+preferred-citation:
+  type: article
+  title: "EquiDexFlow: Contact-Grounded SE(3)-Equivariant Dexterous Grasp Generative Flows"
+  authors:
+    - family-names: Enwerem
+      given-names: Clinton
+    - family-names: Baras
+      given-names: John S.
+    - family-names: Belta
+      given-names: Calin
+  year: 2026
+  month: 6
+  doi: "10.48550/arXiv.2606.12728"
+  url: "https://arxiv.org/abs/2606.12728"
+  notes: "arXiv:2606.12728 [cs.RO]"
