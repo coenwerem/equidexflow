@@ -6,7 +6,7 @@
 
 **Contact-Grounded SE(3)-Equivariant 6-DoF Dexterous Grasp Generative Flows**
 
-[Project Page](https://equidexflow.github.io) &nbsp;·&nbsp;
+[Project Page](https://clintonenwerem.com/equidexflow/) &nbsp;·&nbsp;
 [Paper (arXiv)](http://arxiv.org/abs/2606.12728) &nbsp;·&nbsp;
 [Data](#pretrained-checkpoints--datasets) &nbsp;·&nbsp;
 License: MIT &nbsp;·&nbsp;
@@ -236,7 +236,7 @@ co-rotation, and the held object barely moves.
   <sub>Left to right: mustard bottle (0&deg;, 3.2&nbsp;mm max drift), mustard bottle (120&deg;, 3.4&nbsp;mm), potted-meat can (0&deg;, 0.9&nbsp;mm), potted-meat can (120&deg;, 9.2&nbsp;mm), all pass (&lt; 2&nbsp;cm).</sub>
 </p>
 
-The [project page](https://equidexflow.github.io) has higher-resolution clips
+The [project page](https://clintonenwerem.com/equidexflow/) has higher-resolution clips
 and the full set. We do not release the retargeting and controller stack or the
 Drake harness, since both are platform-specific. What ships here is the model
 that generated the grasps in these clips.
